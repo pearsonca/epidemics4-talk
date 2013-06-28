@@ -23,9 +23,11 @@
 \begin{centering}
 \section*{Abstract}
 \end{centering}
-We compare the relative success of multiple approaches to identifying the source of a simulated series of outbreaks on a real-world network when information is severely limited.
+We compare the relative success of multiple approaches to identifying the source of a simulated series of outbreaks on a real-world network when information is severely limited. The source data for the network is based on wifi co-location data for approximately 100k individuals resulting in a mean contact degree of roughly 12.
 
-The performance of these approaches is subject to several constraints that challenge in real-world investigations: the structure of the network is not directly available, the infection parameters are initially unknown, cases go largely unreported -- {\em e.g.}, because they are misidentified, there is little public health infrastructure, or the disease is typically asymptomatic -- and active investigation results are highly time-sensitive.
+The performance of these approaches is subject to several constraints that challenge in real-world investigations: the structure of the network is not directly available, the infection parameters are initially unknown, cases go largely unreported -- {\em e.g.}, because they are misidentified, there is little public health infrastructure, or the disease is typically asymptomatic -- and active investigation results are highly time-sensitive.  These constraints would make some traditional network analysis based approaches unteneable.
+
+
 % \section{A SIMPLE LIST OF POINTS}
 % \begin{itemize}
 % \item point one,
