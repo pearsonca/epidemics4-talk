@@ -11,23 +11,23 @@
 % \newcommand{\tE}[1]{\ensuremath{{\tilde{E}(#1)}}}
 % \newcommand{\tEt}{\tE{\tau}}
 
-\author{Carl~A.~B.~Pearson, Tom~J.~Hladish}
+\author{Carl~A.~B.~Pearson, Thomas~J.~Hladish}
 %\address{Emerging Pathogens Institute, University of Florida, Gainesville, FL}
 
 \begin{document}
 \SweaveOpts{concordance=TRUE}
-\title{Identifying Outbreak Source on a Network with Limited Information}
+\title{Identifying the Network Source of Outbreaks with Limited Information}
 
 %\institute{Emerging Pathogens Institute, University of Florida}
 \maketitle
 \begin{centering}
 \section*{Abstract}
 \end{centering}
-We compare the relative success of multiple approaches to identifying the source of a simulated series of outbreaks on a real-world network when information is severely limited. The source data for the network is based on wifi co-location data for approximately 100k individuals resulting in a mean contact degree of roughly 12.
+We compare the relative success of multiple approaches to identifying the source of a simulated series of outbreaks on a real-world network when information is severely limited. The source data for the network is based on wifi co-location data for approximately 100k individuals resulting in a mean contact degree of roughly 12, with a highly skewed degree distribution, and complex community structure.
 
-The performance of these approaches is subject to several constraints that challenge in real-world investigations: the structure of the network is not directly available, the infection parameters are initially unknown, cases go largely unreported -- {\em e.g.}, because they are misidentified, there is little public health infrastructure, or the disease is typically asymptomatic -- and active investigation results are highly time-sensitive.  These constraints would make some traditional network analysis based approaches unteneable.
+The performance of these approaches is subject to several constraints that challenge real-world investigations: the structure of the network is not directly available, the infection parameters are initially unknown, cases go largely unreported -- {\em e.g.}, because they are misidentified, there is little public health infrastructure, or the disease is typically asymptomatic -- and active investigation results are highly time-sensitive.
 
-
+These constraints are far more restrictive than those found in typical ``patient zero'' or other network-based disease transmission formulations, and all of our approaches are ultimately heuristic approaches to the network betweenness problem.
 % \section{A SIMPLE LIST OF POINTS}
 % \begin{itemize}
 % \item point one,
