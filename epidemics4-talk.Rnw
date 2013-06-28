@@ -1,0 +1,301 @@
+\documentclass{article}
+
+\usepackage{amsmath,hyperref}
+
+% \newcommand{\Mp}{\ensuremath{{M_{+}}}}
+% \newcommand{\barMp}{\ensuremath{\overline{\Mp}}}
+% \newcommand{\Dt}{\ensuremath{\Delta t}}
+% \newcommand{\tM}[1]{\ensuremath{\tilde{M}(#1)}}
+% \newcommand{\tMt}{\tM{\tau}}
+% \newcommand{\tMB}{\ensuremath{{\tilde{M}_B}}}
+% \newcommand{\tE}[1]{\ensuremath{{\tilde{E}(#1)}}}
+% \newcommand{\tEt}{\tE{\tau}}
+
+\author{Carl~A.~B.~Pearson, Tom~J.~Hladish}
+%\address{Emerging Pathogens Institute, University of Florida, Gainesville, FL}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\title{Identifying Outbreak Source on a Network with Limited Information}
+
+%\institute{Emerging Pathogens Institute, University of Florida}
+\maketitle
+\begin{centering}
+\section*{Abstract}
+\end{centering}
+We compare the relative success of multiple approaches to identifying the source of a simulated series of outbreaks on a real-world network when information is severely limited.
+
+The performance of these approaches is subject to several constraints that challenge in real-world investigations: the structure of the network is not directly available, the infection parameters are initially unknown, cases go largely unreported -- {\em e.g.}, because they are misidentified, there is little public health infrastructure, or the disease is typically asymptomatic -- and active investigation results are highly time-sensitive.
+% \section{A SIMPLE LIST OF POINTS}
+% \begin{itemize}
+% \item point one,
+% \item two,
+% \item see
+% \end{itemize}
+% 
+% \section{INSERTING AN R-GENERATED FIGURE}
+% \begin{figure}
+% \begin{center}
+%<<plotfig1,fig=TRUE,echo=FALSE>>=
+% periodT <- 366; omega <- 2*pi/periodT
+% monthDays<-c(31,29,31,30,31,30,31,31,30,31,30,31)
+% monthOffset<- -(rev(cumsum(monthDays)) + -periodT/2)
+% monthInset<- monthOffset + 15
+% fun <- function(x) { cos(omega*x) }
+% cplot <- function() {
+% plot(fun, xlim=c(-periodT/2,periodT/2), 
+%      xlab="",yaxt="n",xaxt="n",ylab="Mosquito Abundance",type="l",col="blue")
+% axis(side=1, at=c(monthOffset,periodT/2), labels=F)
+% axis(side=1, at=monthInset, labels=c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"),tick=F, cex.axis=0.7)
+% }
+% cplot()
+%@
+% \end{center}
+% \end{figure}
+% notes-notes-notes
+
+% \section{INSERT ANOTHER PDF}
+% \begin{figure}
+% \begin{center}
+% \includegraphics[width=0.9\textwidth]{insert.pdf}
+% \caption{Bicout et al. J. Med. Entomol. 43(5): 936-946 (2006)}
+% \end{center}
+% \end{figure}
+% this is a not uncommon measurement of a seasonally varying vector population.
+
+% \section{SHOW SOME MATH}
+% $$
+% M(t) = C\sin(\omega t+\theta)
+% $$
+% 
+% \section{SEVERAL EQUATIONS}
+% \begin{align*}
+% E(t) &= \begin{cases}
+%         \dfrac{\Mp}{\Dt} & t \in \Dt \\
+%         0 & \textrm{otherwise}
+%         \end{cases}\tag{Step} \\
+% E(\rho, t) &= \begin{cases}
+%         \dfrac{2\Mp}{\Dt(2-\rho)} & t \in \Dt(1-\rho) \\
+%         \dfrac{2\Mp}{\Dt(2-\rho)\rho}\left(1-\dfrac{2|t|}{\Dt}\right) & t \in \rho\Dt \\
+%         0 & \textrm{otherwise}
+%         \end{cases}\tag{Modified Step} \\
+% E(t) &= \dfrac{2\Mp}{\Dt}\sqrt{\dfrac{2}{\pi}}e^{-\dfrac{8t^2}{\Dt^2}}\tag{Approximate $\delta$}
+% \end{align*}
+
+% DEFINE LOTS OF R...
+% <<figcode,echo=FALSE>>=
+% periodT <- 100
+% rhoT <- 0.2
+% Mp <- 100
+% resolution <- 0.0001
+% lambda <- 0.1
+% deltaT <- periodT * rhoT
+% MpDt <- Mp / deltaT
+% barMpDrho <- Mp / (rhoT * periodT)
+% xlim <- c(-periodT/2,periodT/2)
+% xtime <- seq(xlim[1],xlim[2],periodT*resolution)
+% MStepPeak <- Mp / (lambda*deltaT) * (1 - exp(-lambda*deltaT)) / (1 - exp(-lambda*periodT))
+% 
+% Tlambda <- periodT*lambda
+% taulim <- c(-1/2,1/2)
+% xtau <- seq(taulim[1],taulim[2],resolution)
+% D <- 1 / (exp(Tlambda) - 1)
+% library(bvpSolve)
+% Msol<-function(E) {
+%   bvpshoot(
+%     yini=c(y1=NA),
+%     x=xtime,
+%     func=function(t,y,parms) {
+%       list(c(E(t) - lambda*y[1]))
+%     },
+%     guess=c(Mp/periodT),
+%     yend=function(Y,yini,parms) {
+%       c(Y[1] - yini[1])
+%     }, 
+%     parms=c(E=E,lambda=lambda),
+%     maxiter=1e6
+%   )
+% }
+% Mplot <- function(E,ylim=c(0,1.5*MStepPeak)) {
+%   sol <- Msol(E)
+%   plot(sol[,1],sol[,2],
+%        type="l",
+%        xlim=xlim,
+%        ylim=ylim,
+%        ylab="", xlab="",
+%        xaxs="i", yaxs="i",
+%        xaxp=c(-periodT/2,periodT/2,10),
+%        bty="n")
+% }
+% MplotAdder<-function(Eref) {
+%   refSol <- Msol(Eref)
+%   function(E) {
+%     plot(refSol[,1],refSol[,2],
+%          type="l",
+%          xlim=c(-periodT/2,periodT/2),
+%          ylim=c(0,1.5*MStepPeak),
+%          ylab="", xlab="",
+%          xaxt="n", yaxt="n", lwd=2,
+%          #xaxp=c(-periodT/2,periodT/2,10),
+%          bty="n",col="lightgray")
+%     axis(2,seq(0,1.5*MStepPeak,.5*MStepPeak),FALSE)
+%     axis(3,seq(-periodT/2,periodT/2,10),FALSE)
+%     sol <- Msol(E)
+%     lines(sol[,1],sol[,2],lwd=2)
+%   }
+% }
+% EplotAdder<-function(Eref) {
+%   ytime <- Eref(xtime)
+%   function(E) {
+%     plot(xtime,ytime,
+%          type="S",
+%          xlim=c(-periodT/2,periodT/2),
+%          ylim=c(0,2*MpDt),
+%          ylab="", xlab="",
+%          xaxt="n", yaxt="n", lwd=2,
+%          #xaxp=c(-periodT/2,periodT/2,10),
+%          bty="n",col="lightgray")
+%     axis(2,seq(0,2*MpDt,.5*MpDt),FALSE)
+%     axis(1,seq(-periodT/2,periodT/2,10),labels=FALSE)
+%     lines(xtime,E(xtime),lwd=2)
+%   }
+% }
+% # E function factories
+% stopper<-function(which, deltaT=1,MpDt=1,rho=0,periodT=1,Mp=1) {
+%   if (deltaT <= 0 | MpDt <= 0 | rho < 0 | rho > 1 | periodT <= 0 | Mp <= 0)
+%     stop(paste(which,": check arguments",sep=" "))
+% }
+% # step and modified step functions
+% EstepFac <- function(deltaT, MpDt, rho=0) {
+%   stopper("EstepFac", deltaT=deltaT, MpDt=MpDt, rho=rho)
+%   b <- deltaT/2
+%   if (rho == 0) { # step function
+%     function(t) {
+%       ifelse(abs(t) <= b, MpDt, 0)
+%     }
+%   } else {
+%     base <- 2*MpDt / (2-rho)
+%     sloped<-function(abst) { (base/rho)*(1-abst/b) }
+%     if (rho != 1) { # trapezoid
+%       function(t) {
+%         abst<-abs(t)
+%         ifelse( abst<=b,
+%                 ifelse( abst<=b*(1-rho),
+%                         base,
+%                         sloped(abst)
+%                 )
+%           ,0)
+%       }
+%     } else { # triangle
+%       function(t) { 
+%         abst<-abs(t)
+%         ifelse( abst<=b, sloped(abst) ,0)
+%       }
+%     }
+%   }
+% }
+% 
+% # delta function
+% EdeltaFac <- function(deltaT, MpDt) {
+%   stopper("EdeltaFac", deltaT=deltaT, MpDt=MpDt)
+%   C <- MpDt * 2 * sqrt( 2/pi )
+%   var <- -8 / deltaT^2
+%   function(t) {
+%     C * exp(var * t^2)
+%   }
+% } 
+% 
+% # delta function composed with trigonometric function
+% EdeltaTrigFac <- function(deltaT, MpDt, periodT) {
+%   stopper("EdeltaTrigFac", deltaT=deltaT, MpDt=MpDt, periodT=periodT)
+%   w <- pi / periodT
+%   C <- MpDt * 2*sqrt( 2/pi )
+%   var <- -8 / (w*deltaT)^2
+%   function(t) {
+%     C * exp(var * sin(w*t)^2)
+%   }
+% }
+% 
+% # conventional trig-based function for seasonality
+% EtrigFac <- function(Mp, periodT) { 
+%   stopper("EtrigFac",Mp=Mp, periodT=periodT)
+%   C <- Mp / periodT
+%   w <- 2 * pi / periodT
+%   function(t) {
+%     C *(1+cos(w*t))
+%   }
+% } 
+% 
+% # trig-based function w/ parameter to squeeze peak
+% EtrigPropFac <- function(Mp, deltaT, periodT) {
+%   stopper("EtrigPropFac",Mp=Mp, deltaT=deltaT, periodT=periodT)
+%   omega <- pi / periodT
+%   n <- floor((2*sin( pi*deltaT / (periodT*2) )^2)^(-1))
+%   topf <- factorial(n)
+%   bf <- factorial(2*n)
+%   C <- 2^(2*n)*topf^2 / (periodT*bf) * Mp
+%   function(t) {
+%     C*cos(omega * t)^(2*n)
+%   }
+% } 
+% 
+% # double logistic
+% E2logFac<-function(Mp,deltaT,c) {
+%   stopper("E2logFac", Mp=Mp, deltaT=deltaT)
+%   C <- Mp / deltaT 
+%   cdt <- c*deltaT / 2
+%   function(t) {
+%     C * ((1+exp(-c*t - cdt))^(-1) - (1+exp(-c*t + cdt))^(-1))
+%   }
+% }
+% Estep <- EstepFac(deltaT,MpDt); # check("estep",Estep)
+% Etrap <- EstepFac(deltaT, MpDt, .5); # check("etrap",Etrap)
+% Etri <- EstepFac(deltaT, MpDt, 1); # check("etri",Etri)
+% Edelta <- EdeltaFac(deltaT, MpDt); # check("edelta",Edelta)
+% Edeltatrig <- EdeltaTrigFac(deltaT, MpDt, periodT); # check("edeltatrig",Edeltatrig)
+% Etrig <- EtrigFac(Mp,periodT); # check("etrig",Etrig)
+% Etrigprop <- EtrigPropFac(Mp,deltaT,periodT); # check("etrigprop",Etrigprop)
+% E2log<-E2logFac(Mp,deltaT,1); # check("e2log",E2log)
+% EtAdder<-EplotAdder(Estep)
+% MpAdder<-MplotAdder(Estep)
+% PlotStacker<-function(E,name) {
+%   par(mfcol=c(2,1),mar=c(2,2,1,1))
+%   EtAdder(E)
+%   MpAdder(E)
+% }
+% @
+
+% THEN USE IT SEVERAL TIMES
+% \section{THINGS}
+% \subsection{Modified Step (Trapezoid)}
+% \begin{figure}
+% \begin{center}
+% <<pstrap,echo=FALSE,fig=TRUE>>=
+% PlotStacker(Etrap)
+% @
+% \end{center}
+% \end{figure}
+% 
+% \subsection{Modified Step (Triangle)}
+% \begin{figure}
+% \begin{center}
+% <<pstri,echo=FALSE,fig=TRUE>>=
+% PlotStacker(Etri)
+% @
+% \end{center}
+% \end{figure}
+% 
+% \subsection{Approx. $\delta$}
+% \begin{figure}
+% \begin{center}
+% <<psdel,echo=FALSE,fig=TRUE>>=
+% PlotStacker(Edelta)
+% @
+% \end{center}
+% \end{figure}
+
+% \section{BIBLIOGRAPHY EXAMPLE (CITE ON PREV SLIDE)}
+% \bibliography{biblio}{}
+% \bibliographystyle{plain}
+
+\end{document}
