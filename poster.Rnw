@@ -58,7 +58,12 @@ The aggregation of empirical observations has important implications for simulat
     \begin{column}{0.6\paperwidth}
     \begin{block}{Results}
     \begin{figure}
-    \includegraphics[width=0.8\linewidth]{placeholder.jpg}
+<<plotfig1,fig=TRUE,echo=FALSE>>=
+par(mfcol=c(1,2))
+plot(runif(100),runif(100),xlim=c(0,1),ylim=c(0,1))
+plot(runif(100),runif(100),xlim=c(0,1),ylim=c(0,1))
+@
+%    \includegraphics[width=0.8\linewidth]{placeholder.jpg}
     \caption{The first figure should be a series of comparisons of network measures (e.g., degree distribution) for the totally aggregated network vs averaged values of the network aggregated at different time periods - 1 year, 1 month, 1 week, 1 day.  May also want to do some heat charts of those measures through time, since the averages might hide neat insights like seasonality.}
     \end{figure}
     \begin{figure}
