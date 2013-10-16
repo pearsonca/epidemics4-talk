@@ -24,7 +24,7 @@
 
 \documentclass[final]{beamer}
 
-\usepackage[scale=1.24]{beamerposter} % Use the beamerposter package for laying out the poster
+\usepackage[scale=1.24,orientation=potrait,size=a0,debug]{beamerposter} % Use the beamerposter package for laying out the poster
 
 \usetheme{confposter} % Use the confposter theme supplied with this template
 
@@ -46,12 +46,12 @@
 \newlength{\onecolwid}
 \newlength{\twocolwid}
 \newlength{\threecolwid}
-\setlength{\paperwidth}{48in} % A0 width: 46.8in
-\setlength{\paperheight}{36in} % A0 height: 33.1in
-\setlength{\sepwid}{0.024\paperwidth} % Separation width (white space) between columns
-\setlength{\onecolwid}{0.22\paperwidth} % Width of one column
+\setlength{\paperwidth}{65cm} % A0 width: 46.8in
+\setlength{\paperheight}{90cm} % A0 height: 33.1in
+\setlength{\sepwid}{0.01\paperwidth} % Separation width (white space) between columns
+\setlength{\onecolwid}{0.30\paperwidth} % Width of one column
 \setlength{\twocolwid}{0.464\paperwidth} % Width of two columns
-\setlength{\threecolwid}{0.708\paperwidth} % Width of three columns
+\setlength{\threecolwid}{0.68\paperwidth} % Width of three columns
 \setlength{\topmargin}{-0.5in} % Reduce the top margin size
 %-----------------------------------------------------------
 
@@ -129,11 +129,11 @@ We have a large population, multi-year dataset for geo-temporal co-location, bas
 
 \begin{column}{\sepwid}\end{column} % Empty spacer column
 
-\begin{column}{\twocolwid} % Begin a column which is two columns wide (column 2)
+\begin{column}{\threecolwid} % Begin a column which is two columns wide (column 2)
 
-\begin{columns}[t,totalwidth=\twocolwid] % Split up the two columns wide column
+%\begin{columns}[t,totalwidth=\twocolwid] % Split up the two columns wide column
 
-\begin{column}{\onecolwid}\vspace{-.6in} % The first column within column 2 (column 2.1)
+%\begin{column}{\onecolwid}\vspace{-.6in} % The first column within column 2 (column 2.1)
 
 %----------------------------------------------------------------------------------------
 %	MATERIALS
@@ -165,9 +165,9 @@ Should describe the data set here.  Collection times, number of data points, ass
 
 %----------------------------------------------------------------------------------------
 
-\end{column} % End of column 2.1
+%\end{column} % End of column 2.1
 
-\begin{column}{\onecolwid}\vspace{-.6in} % The second column within column 2 (column 2.2)
+%\begin{column}{\onecolwid}\vspace{-.6in} % The second column within column 2 (column 2.2)
 
 %----------------------------------------------------------------------------------------
 %	METHODS
@@ -187,25 +187,25 @@ When simulating the epidemics, we randomly select an iniital infective.  Infecti
 
 %----------------------------------------------------------------------------------------
 
-\end{column} % End of column 2.2
+%\end{column} % End of column 2.2
 
-\end{columns} % End of the split of column 2 - any content after this will now take up 2 columns width
+%\end{columns} % End of the split of column 2 - any content after this will now take up 2 columns width
 
 %----------------------------------------------------------------------------------------
 %	IMPORTANT RESULT
 %----------------------------------------------------------------------------------------
 
-\begin{alertblock}{Important Result}
+%\begin{alertblock}{Important Result}
 
-Comparison of the epidemic final size distribution and time evolution across some parameters, and in comparison to the same, with the same parameters, for the fully aggregated network.
+%Comparison of the epidemic final size distribution and time evolution across some parameters, and in comparison to the same, with the same parameters, for the fully aggregated network.
 
-\end{alertblock} 
+%\end{alertblock} 
 
 %----------------------------------------------------------------------------------------
 
-\begin{columns}[t,totalwidth=\twocolwid] % Split up the two columns wide column again
+%\begin{columns}[t,totalwidth=\twocolwid] % Split up the two columns wide column again
 
-\begin{column}{\onecolwid} % The first column within column 2 (column 2.1)
+%\begin{column}{\onecolwid} % The first column within column 2 (column 2.1)
 
 %----------------------------------------------------------------------------------------
 %	MATHEMATICAL SECTION
@@ -239,9 +239,9 @@ Probably not relevant.  Maybe restate the network measures?  Diagram SIR flow?
 
 %----------------------------------------------------------------------------------------
 
-\end{column} % End of column 2.1
+%\end{column} % End of column 2.1
 
-\begin{column}{\onecolwid} % The second column within column 2 (column 2.2)
+%\begin{column}{\onecolwid} % The second column within column 2 (column 2.2)
 
 %----------------------------------------------------------------------------------------
 %	RESULTS
@@ -274,15 +274,15 @@ Probably not relevant.  Maybe restate the network measures?  Diagram SIR flow?
 
 %----------------------------------------------------------------------------------------
 
-\end{column} % End of column 2.2
+%\end{column} % End of column 2.2
 
-\end{columns} % End of the split of column 2
+%\end{columns} % End of the split of column 2
 
-\end{column} % End of the second column
+%\end{column} % End of the second column
 
-\begin{column}{\sepwid}\end{column} % Empty spacer column
+%\begin{column}{\sepwid}\end{column} % Empty spacer column
 
-\begin{column}{\onecolwid} % The third column
+%\begin{column}{\onecolwid} % The third column
 
 %----------------------------------------------------------------------------------------
 %	CONCLUSION
