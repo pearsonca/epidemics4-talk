@@ -7,25 +7,30 @@
   %\usepackage{times}\usefonttheme{professionalfonts}  % times is obsolete
   \usefonttheme[onlymath]{serif}
   \boldmath
-  \usepackage[orientation=portrait,size=a0,scale=1.4,debug]{beamerposter}                       % e.g. for DIN-A0 poster
+  \usepackage[orientation=portrait,size=a0,scale=1.2,debug]{beamerposter}                       % e.g. for DIN-A0 poster
   \title[Epi. on Emp. Nets]{Epidemics on Dynamic,\\ Empirical Networks}
   \author[Pearson \& Hladish]{Carl A.~B.~Pearson \&\ Thomas J.~Hladish}
   \institute[EPI-UF]{Emerging Pathogens Institute, University of Florida}
   \date{\today}
+  \newcommand{\spaceProp}{0.02}
+  \newcommand{\spacer}{\begin{column}{\spaceProp\paperwidth}\end{column}}
   
-  \newcommand{\spacer}{\begin{column}{0.02\paperwidth}\end{column}}
+  \newenvironment{oneCol}{\begin{column}[t]{0.225\paperwidth}}{\end{column}}
+  \newenvironment{threeCol}{\begin{column}[t]{0.715\paperwidth}}{\end{column}}
   
 \usepackage{Sweave}
 \begin{document}
+
+
 \input{poster-concordance}
   \begin{frame}{}
     \begin{columns}[t]
     \spacer{}
-    \begin{column}[t]{0.33\paperwidth}
+    \begin{oneCol}
     \begin{block}{Introduction}
-Contact networks are \textbf{intrinsically temporal}, but we often analyze them as \textbf{aggregated over time}.  This simplifies both analytical and simulation approaches, but with simulation approaches we may dis-aggregate with minimal additional complexity when we simulate on empirical networks.
+Contact networks are \textbf{intrinsically temporal}, but often analyzed as \textbf{time-aggregated} to simplify analysis and simulation.  Simulation on empirical networks, however, may skip this aggregation with minimal additional complexity.
 
-We have a large population, multi-year dataset for geo-temporal co-location, based on anonymized access to a municipal WiFi system.  We use that data to explicitly consider compare the time evolution of network measures when aggregating on shorter time scales up to aggregating over the entire period.  We then use the network as a time-varying, empirical backbone for simulating infection spread.
+We consider such simulation on a large population, multi-year dataset for geo-temporal co-location.  The data are derived from access to a municipal WiFi system at business-based access points.  We use that data to explicitly consider compare the time evolution of network measures when aggregating on shorter time scales up to aggregating over the entire period.  We then use the network as a time-varying, empirical backbone for simulating infection spread.
 %     \begin{block}{\large Fontsizes}
 %       \centering
 %       {\tiny tiny}\par
@@ -54,14 +59,14 @@ Probably not relevant.  Maybe restate the network measures?  Diagram SIR flow?
     \begin{block}{Conclusion}
 The aggregation of empirical observations has important implications for simulation results.
     \end{block}
-    \end{column}
+    \end{oneCol}
     \spacer{}
-    \begin{column}{0.6\paperwidth}
+    \begin{threeCol}
     \begin{block}{Results}
     \begin{figure}
 \includegraphics{poster-plotfig1}
 %    \includegraphics[width=0.8\linewidth]{placeholder.jpg}
-    \caption{The first figure should be a series of comparisons of network measures (e.g., degree distribution) for the totally aggregated network vs averaged values of the network aggregated at different time periods - 1 year, 1 month, 1 week, 1 day.  May also want to do some heat charts of those measures through time, since the averages might hide neat insights like seasonality.}
+    \caption{The first figure should be a series of comparisons of network measures (e.g., degree distribution) for the totally aggregated network vs averaged values of the network aggregated at different time periods - 1 year, 1 month, 1 week, 1 day.  May also want to do some heat charts of those measures through time, since the averages might hide neat insights like seasonality.  I also think we could use some plots of something approximating edge weights -- like the distribution of edge duration proportion (time edge exists as fraction of interval).}
     \end{figure}
     \begin{figure}
     \includegraphics[width=0.8\linewidth]{placeholder.jpg}
@@ -70,7 +75,7 @@ The aggregation of empirical observations has important implications for simulat
     
     \end{block}
     \vfill
-    \end{column}
+    \end{threeCol}
     \spacer{}
     \end{columns}
   \end{frame}

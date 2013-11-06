@@ -7,24 +7,32 @@
   %\usepackage{times}\usefonttheme{professionalfonts}  % times is obsolete
   \usefonttheme[onlymath]{serif}
   \boldmath
-  \usepackage[orientation=portrait,size=a0,scale=1.4,debug]{beamerposter}                       % e.g. for DIN-A0 poster
+  \usepackage[orientation=portrait,size=a0,scale=1.2,debug]{beamerposter}                       % e.g. for DIN-A0 poster
   \title[Epi. on Emp. Nets]{Epidemics on Dynamic,\\ Empirical Networks}
   \author[Pearson \& Hladish]{Carl A.~B.~Pearson \&\ Thomas J.~Hladish}
   \institute[EPI-UF]{Emerging Pathogens Institute, University of Florida}
   \date{\today}
+  \newcommand{\spaceProp}{0.02}
+  \newcommand{\spacer}{\begin{column}{\spaceProp\paperwidth}\end{column}}
   
-  \newcommand{\spacer}{\begin{column}{0.02\paperwidth}\end{column}}
+  \newenvironment{oneCol}{\begin{column}[t]{0.225\paperwidth}}{\end{column}}
+  \newenvironment{threeCol}{\begin{column}[t]{0.715\paperwidth}}{\end{column}}
   
 \begin{document}
+
+<<header,echo=FALSE>>=
+defPar <- par()
+@
+
 \SweaveOpts{concordance=TRUE}
   \begin{frame}{}
     \begin{columns}[t]
     \spacer{}
-    \begin{column}[t]{0.33\paperwidth}
+    \begin{oneCol}
     \begin{block}{Introduction}
-Contact networks are \textbf{intrinsically temporal}, but we often analyze them as \textbf{aggregated over time}.  This simplifies both analytical and simulation approaches, but with simulation approaches we may dis-aggregate with minimal additional complexity when we simulate on empirical networks.
+Contact networks are \textbf{intrinsically temporal}, but often analyzed as \textbf{time-aggregated} to simplify analysis and simulation.  Simulation on empirical networks, however, may skip this aggregation with minimal additional complexity.
 
-We have a large population, multi-year dataset for geo-temporal co-location, based on anonymized access to a municipal WiFi system.  We use that data to explicitly consider compare the time evolution of network measures when aggregating on shorter time scales up to aggregating over the entire period.  We then use the network as a time-varying, empirical backbone for simulating infection spread.
+We consider such simulation on a large population, multi-year dataset for geo-temporal co-location.  The data are derived from access to a municipal WiFi system at business-based access points.  We use that data to explicitly consider compare the time evolution of network measures when aggregating on shorter time scales up to aggregating over the entire period.  We then use the network as a time-varying, empirical backbone for simulating infection spread.
 %     \begin{block}{\large Fontsizes}
 %       \centering
 %       {\tiny tiny}\par
@@ -53,18 +61,49 @@ Probably not relevant.  Maybe restate the network measures?  Diagram SIR flow?
     \begin{block}{Conclusion}
 The aggregation of empirical observations has important implications for simulation results.
     \end{block}
-    \end{column}
+    \end{oneCol}
     \spacer{}
-    \begin{column}{0.6\paperwidth}
+    \begin{threeCol}
     \begin{block}{Results}
     \begin{figure}
+<<ioEdgeTimeSeries,echo=FALSE>>=
+graph.measure.plotting <- function(.path=".", degree.pattern="degrees.csv$") {
+  ## expect file heads = "start end 0 1 ... n" where n is the max degree for the series
+  ## rows are then an observation interval at a time
+  ## format = $starttime $endtime $degreeCount[0] $degreeCount[1] ... $degreeCount[n]
+  ## terminate with a newline
+  degree.ts.df.list <- lapply( ## consolidate data handles for processing
+    dir(path=.path, pattern=degree.pattern),
+    read.csv,
+    header=T, sep="", fill=T)
+  par(mfrow=c(length(degree.ts.df.list),1),
+      bty="n", mar=c(0.5,3,0.5,0.5), oma=c(3,0,0,0))
+  yield<-lapply(degree.ts.df.list, function(e.csv) { ## 
+    xlim<-c(min(e.csv$start), max(e.csv$end))
+    x <- (e.csv$start + e.csv$end)/2
+    ylim<-c(0, dim(e.csv)[2]-3) # 2 for start/end + 1 for 0
+    y <- seq(0,ylim[2])
+    z <- as.matrix(e.csv[,-c(1,2)])
+    image(x,y,z,xlim=xlim, ylim=ylim,xaxt="n",xlab="",ylab="k")
+    list(xlim=xlim,x=x)
+  })
+  tticks <- tail(yield,1)[[1]]
+  axis(1,outer=T,at=c(tticks$xlim[1],tticks$x,tticks$xlim[2]))
+}
+graph.measure.plotting()
+# spec for edge degree distribution data
+# [where hourstart = 0 for start of time series,
+#  25 for 1 AM second day, etc out to end];
+#  TODO: go the (lesser) resolution of daystart dayend instead?
+# "start" "end" "0-count" "1-count" ... "n-count" ... "max-degree-count-for-entire-ts"
+# hourstart hourend 0-count 1-count ... n-count ... max-degree-count-for-time
+# want separate files for each aggregation level
+@
 <<plotfig1,fig=TRUE,echo=FALSE>>=
-par(mfcol=c(1,2))
-plot(runif(100),runif(100),xlim=c(0,1),ylim=c(0,1))
-plot(runif(100),runif(100),xlim=c(0,1),ylim=c(0,1))
+graph.measure.plotting()
 @
 %    \includegraphics[width=0.8\linewidth]{placeholder.jpg}
-    \caption{The first figure should be a series of comparisons of network measures (e.g., degree distribution) for the totally aggregated network vs averaged values of the network aggregated at different time periods - 1 year, 1 month, 1 week, 1 day.  May also want to do some heat charts of those measures through time, since the averages might hide neat insights like seasonality.}
+    \caption{The first figure should be a series of comparisons of network measures (e.g., degree distribution) for the totally aggregated network vs averaged values of the network aggregated at different time periods - 1 year, 1 month, 1 week, 1 day.  May also want to do some heat charts of those measures through time, since the averages might hide neat insights like seasonality.  I also think we could use some plots of something approximating edge weights -- like the distribution of edge duration proportion (time edge exists as fraction of interval).}
     \end{figure}
     \begin{figure}
     \includegraphics[width=0.8\linewidth]{placeholder.jpg}
@@ -73,7 +112,7 @@ plot(runif(100),runif(100),xlim=c(0,1),ylim=c(0,1))
     
     \end{block}
     \vfill
-    \end{column}
+    \end{threeCol}
     \spacer{}
     \end{columns}
   \end{frame}
