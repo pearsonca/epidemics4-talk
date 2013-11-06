@@ -12,3 +12,7 @@
 .DS_Store
 
 cacheSweaveStorage*
+
+.Rhistory
+
+Rplots.pdf
