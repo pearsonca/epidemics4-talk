@@ -4,10 +4,9 @@
   \usepackage[english]{babel}
   \usepackage[latin1]{inputenc}
   \usepackage{amsmath,amsthm, amssymb, latexsym}
-  %\usepackage{times}\usefonttheme{professionalfonts}  % times is obsolete
   \usefonttheme[onlymath]{serif}
   \boldmath
-  \usepackage[orientation=portrait,size=a0,scale=1.2,debug]{beamerposter}                       % e.g. for DIN-A0 poster
+  \usepackage[orientation=portrait,size=a0,scale=1.1,debug]{beamerposter}                       % e.g. for DIN-A0 poster
   \title[Epi. on Emp. Nets]{Epidemics on Dynamic,\\ Empirical Networks}
   \author[Pearson \& Hladish]{Carl A.~B.~Pearson \&\ Thomas J.~Hladish}
   \institute[EPI-UF]{Emerging Pathogens Institute, University of Florida}
@@ -30,7 +29,7 @@
     \begin{block}{Introduction}
 Contact networks are \textbf{intrinsically temporal}, but often analyzed as \textbf{time-aggregated} to simplify analysis and simulation.  Simulation on empirical networks, however, may skip this aggregation with minimal additional complexity.
 
-We consider such simulation on a large population, multi-year dataset for geo-temporal co-location.  The data are derived from access to a municipal WiFi system at business-based access points.  We use that data to explicitly consider compare the time evolution of network measures when aggregating on shorter time scales up to aggregating over the entire period.  We then use the network as a time-varying, empirical backbone for simulating infection spread.
+We consider such simulation on $\mathbf{P\approx 10^6}$\textbf{ nodes}, interacting via $\mathbf{N\approx 10^6}$\textbf{ edges}, over \textbf{5-years of geo-temporal co-location} data, derived from municipal WiFi access at businesses.  We start with a \textbf{review of network measures for different aggregation windows} on that data, and \textbf{conclude comparing simulated infections on these dynamic networks}.
 %     \begin{block}{\large Fontsizes}
 %       \centering
 %       {\tiny tiny}\par
@@ -44,20 +43,29 @@ We consider such simulation on a large population, multi-year dataset for geo-te
 %       {\VeryHuge VeryHuge}\par
     \end{block}
     \begin{block}{Materials}
-Should describe the data set here.  Collection times, number of data points, assorted other counts, etc.  Probably a table.  Links to source tools.
+Network analysis and epidemic simulation used EpiFire\cite{hladish2012epifire}.  Visualization and poster prepared with Rweave, source @ \href{https://github.com/pearsonca/epidemics4-talk}{github.com/pearsonca/epidemics4-talk}.
     \end{block}
     \begin{block}{Methods}
-The network measures are derived in the standard way, with the edges aggregated on co-temporal, co-location within the varying windows. 
+Network measures computed in the standard way, after edges are determined on a per-time-period basis.  An edge exists between individuals if their access periods at a location overlap during a time period.
 
-The epidemic simulation is based on conventional network Susceptible-Infectious-Recovered simulation.  We established the reference transmission probabilities by fitting to final sizes for typical influenza outbreaks in the associated city.
+The epidemic is simulated given three parameters:\begin{itemize}
+\item transmission probability along a contact per simulation time, $\rho$,
+\item latent period, $\lambda_L$, and
+\item infectious period, $\lambda_I$
+\end{itemize}
 
-When simulating the epidemics, we randomly select an iniital infective.  Infectives are uniformly infectious for a period of days $\tau$, and while infectious spread the infection with transmission probability $p$ to each of their suspectible neighboors each day.  Who is in their neighboorhood, however, changes each day according to the empirical contact network.
+We selected the $\lambda$s from literature estimates for influenza.  We fit $\rho$ for each binning scale to reproduce mean final size literature estimates for influenza.  The simulation proceeds as typical for a static contact network, however as time passes one of the binning boundaries, edges are added and removed accordingly.
     \end{block}
     \begin{block}{Mathematical Section}
 Probably not relevant.  Maybe restate the network measures?  Diagram SIR flow?
     \end{block}
     \begin{block}{Conclusion}
 The aggregation of empirical observations has important implications for simulation results.
+    \end{block}
+    \begin{block}{References}
+      \nocite{*} % Insert publications even if they are not cited in the poster
+      \small{\bibliographystyle{unsrt}
+      \bibliography{biblio}\vspace{0.75in}}
     \end{block}
     \end{oneCol}
     \spacer{}
