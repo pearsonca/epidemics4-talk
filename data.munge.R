@@ -1,4 +1,6 @@
-setwd("/Volumes/Data/dropbox/")
+setwd("~/Dropbox/") #setwd("/Volumes/Data/dropbox/") 
+origin <- as.POSIXct(strptime('2004-01-01 00:00:00', '%Y-%m-%d %H:%M:%S'))
+
 con <- gzfile("montreal.tgz")
 montreal.df<-read.csv(con,header=F,skip=1, sep=",", col.names=c("user.id","loc.id","start.s","end.s"))
 close(con)
@@ -43,7 +45,10 @@ loc.destruction <- aggregate(montreal.df$end.s,
     by=list(loc.id = montreal.df$loc.id), max, na.rm=T)
 loc.destruction <- loc.destruction[with(loc.destruction,order(x,loc.id)),]
 
-
+loc.cutoff <- subset(aggregate(rep.int(1,dim(montreal.df)[1]), by=list(loc.id = montreal.df$loc.id, end.s = montreal.df$end.s), sum), x > 1)
+loc.cutoff <- loc.cutoff[with(loc.cutoff,order(x,loc.id)),]
+#most.cutoff <- unique(subset(loc.cutoff, x > 10, select="loc.id"))
+#more.cutoff <- subset(montreal.df, loc.id %in% most.cutoff$loc.id)
 
 assessor <- with(montreal.df,{
   function(row) any(user.id == row["user.id"] & loc.id != row["loc.id"])
