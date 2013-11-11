@@ -1,4 +1,5 @@
 #include <Percolation_Sim.h>
+#include <tuple.h>
 
 // This example simulates an epidemic on a changing network using an SIR
 // percolation simulation.  Since networks that change with time can be
@@ -12,15 +13,16 @@
 // no self-loops or parallel edges get created (it's possible that
 // additional edges will get shuffled in order to get rid of these).
 
-
 int main() {
 
     // Construct an undirected network
-    // with size 10,000 and a poisson(5)
-    // degree distribution
-    Network net("name", Network::Undirected);
-    net.populate(10000);
-    net.fast_random_graph(5);
+	Network net("name", Network::Undirected);
+	string filename = "testthing"; // TODO parse an arg to get this
+    net.read_edgelist(filename);
+	
+	int deltaT = 10; // TODO parse an arg to get this
+	string diffFileName = "othertestthing"; // TODO parse an arg to get this
+	EdgeStream edgeStream(diffFileName, deltaT);
 
     // Create variables to handle node migration
     vector<Node*> nodes = net.get_nodes();
@@ -36,36 +38,23 @@ int main() {
     // Continue the simulation as long as someone is still infected
     while (sim.count_infected() > 0) {
         sim.step_simulation(); // This advances the simulation by one infectious pd
-        
-        shuffle(nodes, net.get_rng()); // Shuffle the nodes
-        for (int i = 0; i < num_to_migrate; i++) { // Migrate the first 1000
-            Node* node = nodes[i];
-            vector<Edge*> edges_out = node->get_edges_out();
-            vector<Edge*> edges_in = node->get_edges_in();
-            
-            // Break all outbound edges
-            for (unsigned int j = 0; j < edges_out.size(); j++) {
-                Edge* outbound_edge = edges_out[j];
-                if (not outbound_edge->is_stub() ) {
-                    edges_out[j]->break_end();
-                    broken_edges.push_back(edges_out[j]);
-                }
-            }
-            
-            // Break all inbound edges
-            for (unsigned int j = 0; j < edges_in.size(); j++) {
-                Edge* inbound_edge = edges_in[j];
-                if (not inbound_edge->is_stub() ) {
-                    edges_in[j]->break_end();
-                    broken_edges.push_back(edges_in[j]);
-                }
-            }
-        }
-
-        // Randomly reconnect all broken edges
-        net.rand_connect_stubs(broken_edges);
-        broken_edges.clear();
-    }
+        tuple<vector<tuple<int,int>>,vector<tuple<int,int>>> diffs = edgeStream.step(); // get the "next" step from edge stream; these can be empty
+		vector<tuple<int,int>> added = diffs.get<0>;
+		vector<tuple<int,int>> removed = diffs.get<1>;
+		for (int i = 0; i < removed.size(); i++) {
+		  int node0 = removed[i].get<0>;
+		  int node1 = removed[i].get<1>;
+		  net.get_node(node0).disconnect_from(net.get_node(node1));
+		}
+		
+		for (int i = 0; i < added.size(); i++) {
+		  int node0 = added[i].get<0>;
+		  int node1 = added[i].get<1>;
+		  net.get_node(node0).connect_to(net.get_node(node1));
+		}
+	    // print out some stuff? intermediate infection results?
+			
+	}
     // The following line is not necessary, but validate() will check
     // to make sure that the network structure is still valid.  For example,
     // If Node A has an edge leading to Node B, Node B must know it has an
