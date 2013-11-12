@@ -1,13 +1,19 @@
-setwd("~/Dropbox/")
 origin <- as.POSIXct(strptime('2004-01-01 00:00:00', '%Y-%m-%d %H:%M:%S'))
+## time zero in the data.  first actual data point is later in 2004
 debug <- F
+## flag for the interactive portions of the script
 
-con <- gzfile("montreal.tgz")
-montreal.df<-read.csv(con,header=F,skip=1, sep=",", col.names=c("user.id","loc.id","start.s","end.s"))
-# close(con) seems unnecessary for gzfile?
+#con <- gzfile("~/Dropbox/montreal.tgz") # since close irrelevant, don't need to hold on to con?
+montreal.df<-read.csv(gzfile("~/Dropbox/montreal.tgz"),header=F,skip=1, sep=",", col.names=c("user.id","loc.id","start.s","end.s"))
+# close(con) # apparently unnecessary for gzfile?
+
+# calc connection durations
 montreal.df$duration <- montreal.df$end.s - montreal.df$start.s
+
+## addressing duration < 0
+## resolution based on output of below logic:
 ## given the small number of these,
-## and the unclear origin,
+## and the unclear provenance, 
 ## resolve by manual inspection where duration < 0
 if (debug) dump<-apply(subset(montreal.df,duration<0),1,function(row) {
   tot<-subset(montreal.df, user.id == row["user.id"] & loc.id == row["loc.id"] & start.s != row["start.s"] & end.s != row["end.s"] )
@@ -38,25 +44,18 @@ montreal.df[which(montreal.df$duration < 0),"duration"] <- -montreal.df[which(mo
 
 hour <- 60*60
 window <- 0.5 # half hour
+xscale<-1/10000
 hist.data <- hist(subset(montreal.df,!is.na(end.s))$end.s/hour, breaks=seq(min(montreal.df$end.s,na.rm=T), max(montreal.df$end.s,na.rm=T)+window*hour, by=window*hour)/hour, plot=F )
-
-plot(hist.data$mids, hist.data$counts/max(hist.data$counts),type="h")
+hist.starts <- hist(montreal.df$start.s/hour, breaks=seq(min(montreal.df$start.s,na.rm=T), max(montreal.df$start.s,na.rm=T)+window*hour, by=window*hour)/hour, plot=F )
 
 maxMax <- max(montreal.df$end.s,na.rm=T)
-optMax <- function(x) {
-  res<-max(x,na.rm=T)
-  ifelse(is.infinite(res),maxMax,res)
-}
+optMax <- function(x) ifelse(any(!is.na(x)),max(x,na.rm=T),maxMax)
 
 minMin <- min(montreal.df$start.s,na.rm=T)
-optMin <- function(x) {
-  res<-min(x,na.rm=T)
-  ifelse(is.infinite(res),minMin,res)
-}
+optMin <- function(x) ifelse(any(!is.na(x)),min(x,na.rm=T),minMin)
 
 aggregator <- function(df, tarkey, aggkey, fun) {
-  by <- list()
-  by[[aggkey]] = df[[aggkey]]
+  by <- list(); by[[aggkey]] <- df[[aggkey]]
   res <- aggregate(df[[tarkey]], by=by, fun)
   names(res)[2] <- "time"
   res <- res[order(res$time,res[[aggkey]]),]
@@ -64,27 +63,48 @@ aggregator <- function(df, tarkey, aggkey, fun) {
   res
 }
 
-loc.creation <- aggregator(montreal.df,"start.s","loc.id", optMin)
-lines(loc.creation$time/hour, loc.creation$acc/max(loc.creation$acc), col="green")
+merger<-function(left, right, on) {
+  ## assert: left + right have "acc" key.
+  ## first left entry has time < first right entry time
+  res <- merge(left, right, by=c("time", on), all=T, suffixes=c(".left",".right"))
+  joined <- paste("acc",c("left","right"),sep=".")
+  res[is.na(res[[joined[1]]]),joined[1]] <- 0; res[is.na(res[[joined[2]]]),joined[2]] <- 0
+  left.rle <- rle(res[[joined[1]]]); right.rle <- rle(res[[joined[2]]])
+  left.rle$values[which(left.rle$values == 0)] <-
+    left.rle$values[which(left.rle$values == 0)-1]
+  right.rle$values[which(right.rle$values[-1] == 0)+1] <-
+    right.rle$values[which(right.rle$values[-1] == 0)]
+  res$acc.left<-inverse.rle(left.rle); res$acc.right<-inverse.rle(right.rle)
+  res$acc <- res$acc.left - res$acc.right
+  res
+}
 
-loc.destruction <- aggregator(montreal.df, "end.s","loc.id", optMax)
-lines(loc.destruction$time/hour, loc.destruction$acc/max(loc.destruction$acc), col="red")
+createDestroyNet.lines <- function(df, on, lty, xscale) {
+  create <- aggregator(df, "start.s", on, optMin)
+  destroy <- aggregator(df, "end.s", on, optMax)
+  net <- merger(create, destroy, on)
+  mapply(function(data, col) {
+    lines(data$time/hour*xscale, data$acc/max(data$acc), col=col, lty=lty)
+    data ## this makes mapply return list(1 = create, 2 = destroy, 3 = net)
+  }, list(create, destroy, net), list("green","red","blue"))
+}
 
-## merge creation and destruction, interpolate for missing times
-loc.flow <- merge(loc.creation,loc.destruction,by=c("time","loc.id"),all=T)
-loc.flow[is.na(loc.flow$pos.acc),"pos.acc"] <- 0
-loc.flow[is.na(loc.flow$neg.acc),"neg.acc"] <- 0
-pos.rle <- rle(loc.flow$pos.acc)
-neg.rle <- rle(loc.flow$neg.acc)
-pos.rle$values[which(pos.rle$values == 0)] <-
-  pos.rle$values[which(pos.rle$values == 0)-1]
-neg.rle$values[which(neg.rle$values[-1] == 0)+1] <-
-  neg.rle$values[which(neg.rle$values[-1] == 0)]
-loc.flow$pos.acc<-inverse.rle(pos.rle)
-loc.flow$neg.acc<-inverse.rle(neg.rle)
-loc.flow$net <- loc.flow$pos.acc - loc.flow$neg.acc
-lines(loc.flow$time/hour, loc.flow$net/max(loc.flow$net), col="blue")
+png("db_overview.png",units=cm,width=10,height=5)
+plot(hist.starts$mids*xscale, hist.starts$counts/max(hist.starts$counts),
+     type="h", bty="n", xlab="10k hours", ylab="%peak", yaxt="n", xaxt="n", col="grey")
+lines(hist.data$mids*xscale, hist.data$counts/max(hist.data$counts),
+     type="h")
 
+axis(2, at=c(0,0.5,1))
+meh <- pretty(c(min(hist.data$mids),max(hist.data$mids)))*xscale
+meh[1] <- mean(meh[1:2])
+len <- length(meh)
+meh[len] <- mean(meh[(len-1):len])
+axis(1, at=signif(meh,2)) ## weird - no 1.0, 6.0?
+
+dump.loc<-createDestroyNet.lines(montreal.df, "loc.id", lty=1, xscale=xscale)
+dump.user<-createDestroyNet.lines(montreal.df, "user.id", lty=3, xscale=xscale)
+dev.off()
 
 loc.cutoff <- subset(aggregate(rep.int(1,dim(montreal.df)[1]), by=list(loc.id = montreal.df$loc.id, end.s = montreal.df$end.s), sum), x > 1)
 loc.cutoff <- loc.cutoff[with(loc.cutoff,order(x,loc.id)),]
