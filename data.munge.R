@@ -1,10 +1,10 @@
-setwd("~/Dropbox/") #setwd("/Volumes/Data/dropbox/") 
+setwd("~/Dropbox/")
 origin <- as.POSIXct(strptime('2004-01-01 00:00:00', '%Y-%m-%d %H:%M:%S'))
 debug <- F
 
 con <- gzfile("montreal.tgz")
 montreal.df<-read.csv(con,header=F,skip=1, sep=",", col.names=c("user.id","loc.id","start.s","end.s"))
-close(con)
+# close(con) seems unnecessary for gzfile?
 montreal.df$duration <- montreal.df$end.s - montreal.df$start.s
 ## given the small number of these,
 ## and the unclear origin,
@@ -42,20 +42,33 @@ hist.data <- hist(subset(montreal.df,!is.na(end.s))$end.s/hour, breaks=seq(min(m
 
 plot(hist.data$mids, hist.data$counts/max(hist.data$counts),type="h")
 
-loc.creation <- aggregate(montreal.df$start.s,
-    by=list(loc.id = montreal.df$loc.id), min, na.rm=T)
-loc.creation <- loc.creation[with(loc.creation,order(x,loc.id)),]
-names(loc.creation)[2] <- "time"
-loc.creation$pos.acc <- cumsum(rep.int(1,dim(loc.creation)[1]))
-lines(loc.creation$time/hour, loc.creation$pos.acc/max(loc.creation$pos.acc), col="green")
+maxMax <- max(montreal.df$end.s,na.rm=T)
+optMax <- function(x) {
+  res<-max(x,na.rm=T)
+  ifelse(is.infinite(res),maxMax,res)
+}
 
-loc.destruction <- aggregate(montreal.df$end.s,
-    by=list(loc.id = montreal.df$loc.id), max, na.rm=T)
-names(loc.destruction)[2] <- "time"
-loc.destruction[is.infinite(loc.destruction$time),]$time <- max(montreal.df$end.s, na.rm=T)
-loc.destruction <- loc.destruction[with(loc.destruction,order(time,loc.id)),]
-loc.destruction$neg.acc <- cumsum(rep.int(1,dim(loc.destruction)[1]))
-lines(loc.destruction$time/hour, loc.destruction$neg.acc/max(loc.destruction$neg.acc), col="red")
+minMin <- min(montreal.df$start.s,na.rm=T)
+optMin <- function(x) {
+  res<-min(x,na.rm=T)
+  ifelse(is.infinite(res),minMin,res)
+}
+
+aggregator <- function(df, tarkey, aggkey, fun) {
+  by <- list()
+  by[[aggkey]] = df[[aggkey]]
+  res <- aggregate(df[[tarkey]], by=by, fun)
+  names(res)[2] <- "time"
+  res <- res[order(res$time,res[[aggkey]]),]
+  res$acc <- cumsum(rep.int(1,dim(res)[1]))
+  res
+}
+
+loc.creation <- aggregator(montreal.df,"start.s","loc.id", optMin)
+lines(loc.creation$time/hour, loc.creation$acc/max(loc.creation$acc), col="green")
+
+loc.destruction <- aggregator(montreal.df, "end.s","loc.id", optMax)
+lines(loc.destruction$time/hour, loc.destruction$acc/max(loc.destruction$acc), col="red")
 
 ## merge creation and destruction, interpolate for missing times
 loc.flow <- merge(loc.creation,loc.destruction,by=c("time","loc.id"),all=T)
@@ -63,6 +76,14 @@ loc.flow[is.na(loc.flow$pos.acc),"pos.acc"] <- 0
 loc.flow[is.na(loc.flow$neg.acc),"neg.acc"] <- 0
 pos.rle <- rle(loc.flow$pos.acc)
 neg.rle <- rle(loc.flow$neg.acc)
+pos.rle$values[which(pos.rle$values == 0)] <-
+  pos.rle$values[which(pos.rle$values == 0)-1]
+neg.rle$values[which(neg.rle$values[-1] == 0)+1] <-
+  neg.rle$values[which(neg.rle$values[-1] == 0)]
+loc.flow$pos.acc<-inverse.rle(pos.rle)
+loc.flow$neg.acc<-inverse.rle(neg.rle)
+loc.flow$net <- loc.flow$pos.acc - loc.flow$neg.acc
+lines(loc.flow$time/hour, loc.flow$net/max(loc.flow$net), col="blue")
 
 
 loc.cutoff <- subset(aggregate(rep.int(1,dim(montreal.df)[1]), by=list(loc.id = montreal.df$loc.id, end.s = montreal.df$end.s), sum), x > 1)
