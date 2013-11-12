@@ -57,8 +57,13 @@ loc.destruction <- loc.destruction[with(loc.destruction,order(time,loc.id)),]
 loc.destruction$neg.acc <- cumsum(rep.int(1,dim(loc.destruction)[1]))
 lines(loc.destruction$time/hour, loc.destruction$neg.acc/max(loc.destruction$neg.acc), col="red")
 
-loc.flow <- merge(loc.creation,loc.destruction,by=c("time","loc.id"),all=T)
 ## merge creation and destruction, interpolate for missing times
+loc.flow <- merge(loc.creation,loc.destruction,by=c("time","loc.id"),all=T)
+loc.flow[is.na(loc.flow$pos.acc),"pos.acc"] <- 0
+loc.flow[is.na(loc.flow$neg.acc),"neg.acc"] <- 0
+pos.rle <- rle(loc.flow$pos.acc)
+neg.rle <- rle(loc.flow$neg.acc)
+
 
 loc.cutoff <- subset(aggregate(rep.int(1,dim(montreal.df)[1]), by=list(loc.id = montreal.df$loc.id, end.s = montreal.df$end.s), sum), x > 1)
 loc.cutoff <- loc.cutoff[with(loc.cutoff,order(x,loc.id)),]
