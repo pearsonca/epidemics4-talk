@@ -45,15 +45,19 @@ plot(hist.data$mids, hist.data$counts/max(hist.data$counts),type="h")
 loc.creation <- aggregate(montreal.df$start.s,
     by=list(loc.id = montreal.df$loc.id), min, na.rm=T)
 loc.creation <- loc.creation[with(loc.creation,order(x,loc.id)),]
-loc.creation$acc <- cumsum(rep.int(1,dim(loc.creation)[1]))
-lines(loc.creation$x/hour, loc.creation$acc/max(loc.creation$acc), col="green")
+names(loc.creation)[2] <- "time"
+loc.creation$pos.acc <- cumsum(rep.int(1,dim(loc.creation)[1]))
+lines(loc.creation$time/hour, loc.creation$pos.acc/max(loc.creation$pos.acc), col="green")
 
 loc.destruction <- aggregate(montreal.df$end.s,
     by=list(loc.id = montreal.df$loc.id), max, na.rm=T)
-loc.destruction <- loc.destruction[with(loc.destruction,order(x,loc.id)),]
-loc.destruction$acc <- cumsum(rep.int(1,dim(loc.destruction)[1]))
-lines(loc.destruction$x/hour, loc.destruction$acc/max(loc.destruction$acc), col="red")
+names(loc.destruction)[2] <- "time"
+loc.destruction[is.infinite(loc.destruction$time),]$time <- max(montreal.df$end.s, na.rm=T)
+loc.destruction <- loc.destruction[with(loc.destruction,order(time,loc.id)),]
+loc.destruction$neg.acc <- cumsum(rep.int(1,dim(loc.destruction)[1]))
+lines(loc.destruction$time/hour, loc.destruction$neg.acc/max(loc.destruction$neg.acc), col="red")
 
+loc.flow <- merge(loc.creation,loc.destruction,by=c("time","loc.id"),all=T)
 ## merge creation and destruction, interpolate for missing times
 
 loc.cutoff <- subset(aggregate(rep.int(1,dim(montreal.df)[1]), by=list(loc.id = montreal.df$loc.id, end.s = montreal.df$end.s), sum), x > 1)
