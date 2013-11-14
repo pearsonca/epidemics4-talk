@@ -1,11 +1,18 @@
+setwd("~/Dropbox/epidemics4share/")
 origin <- as.POSIXct(strptime('2004-01-01 00:00:00', '%Y-%m-%d %H:%M:%S'))
+require(data.table)
 ## time zero in the data.  first actual data point is later in 2004
 debug <- F; plotting <- F
 ## flag for the interactive portions of the script
 
 #con <- gzfile("~/Dropbox/montreal.tgz") # since close irrelevant, don't need to hold on to con?
-montreal.df<-read.csv(gzfile("~/Dropbox/montreal.tgz"),header=F,skip=1, sep=",", col.names=c("user.id","loc.id","start.s","end.s"))
+montreal.df<-data.table(read.csv(gzfile("~/Dropbox/montreal.tgz"),header=F,skip=1, sep=",", col.names=c("user.id","loc.id","start.s","end.s")))
 # close(con) # apparently unnecessary for gzfile?
+setkey(montreal.df, start.s, end.s, user.id, loc.id)
+montreal.df[is.na(end.s), end.s := start.s]
+montreal.df[end.s < start.s, temp := end.s][ !is.na(temp) , end.s := start.s][ !is.na(temp), start.s := temp ]
+montreal.df$temp <- NULL
+
 
 # calc connection durations
 montreal.df$duration <- montreal.df$end.s - montreal.df$start.s
@@ -41,6 +48,23 @@ montreal.df[which(montreal.df$duration < 0),c("start.s","end.s")] <- montreal.df
 montreal.df[which(montreal.df$duration < 0),"duration"] <- -montreal.df[which(montreal.df$duration < 0),"duration"]
 ## delete alternative: montreal.df <- subset(montreal.df, duration > 0)
 ## another alternative: insert a mean-duration event centered between the start and end?
+
+montreal.df[which]
+
+consolidate.df <- aggregate(start.s ~ loc.id + user.id + end.s, montreal.df, min) ## for identical ends, consolidate starts
+consolidate.df <- aggregate(end.s ~ loc.id + user.id + start.s, consolidate.df, max) ## for identical starts, consolidate ends
+
+dt <- data.table(consolidate.df)
+setkey(dt, start.s, end.s, loc.id, user.id)
+
+for (i in 1:10) {
+  dt[ user.id == dt[i]$user.id & loc.id == dt[i]$loc.id & start.s < dt[i]$end.s, max := max(c(end.s,dt[i]$end.s)) ]
+  #set(dt, i, 4L, max)
+}
+
+
+aggregate(cbind(start.s, end.s) ~ loc.id + user.id, consolidate.df[1:10,], print)
+#consolidate.df <- aggregate(cbind(start.s, end.s) ~ loc.id + user.id + end.s, notnas.df[1:10,], sum)
 
 if (plotting) {
   hour <- 60*60
@@ -108,6 +132,7 @@ if (plotting) {
   dev.off()
 
 }
+
 betweener<-function(start, end) {
   function(time) !is.na(time) & (start <= time) & (time <= end)
   # closed left, closed right:
@@ -157,7 +182,16 @@ processer <- function(wr) {
 
 starts <- breaks[-length(breaks)]
 ends <- breaks[-1]
-invisible(mapply(processer(writer("test.o")), starts, ends, MoreArgs=list(df=montreal.df)))
+daySpan <- 90
+startDays <- seq(1, length(starts), by=daySpan)
+endDays <- startDays + daySpan
+endDays <- endDays - 1
+endDays[length(endDays)]<-length(starts)
+
+#head(ends[endDays]) - head(starts[startDays])
+#tail(ends[endDays]) - tail(starts[startDays])
+fname <- paste("day",daySpan,"els.o", sep="")
+invisible(mapply(processer(writer(fname)), starts[startDays], ends[endDays], MoreArgs=list(df=montreal.df)))
 
 # loc.cutoff <- subset(aggregate(rep.int(1,dim(montreal.df)[1]), by=list(loc.id = montreal.df$loc.id, end.s = montreal.df$end.s), sum), x > 1)
 # loc.cutoff <- loc.cutoff[with(loc.cutoff,order(x,loc.id)),]
