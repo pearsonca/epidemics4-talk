@@ -12,8 +12,15 @@ setkey(montreal.df, start.s, end.s, user.id, loc.id)
 montreal.df[is.na(end.s), end.s := start.s]
 montreal.df[end.s < start.s, temp := end.s][ !is.na(temp) , end.s := start.s][ !is.na(temp), start.s := temp ]
 montreal.df$temp <- NULL
+# TODO use data.table for these
+consolidate.df <- aggregate(start.s ~ user.id + loc.id +  end.s, montreal.df, min) ## for identical ends, consolidate starts
+consolidate.df <- aggregate(end.s ~ user.id + loc.id + start.s, consolidate.df, max)
+write.table(consolidate.df, file="testdt.o", row.names=F, col.names=F)
 
+# at this point, defer to languages more amenable to this sort of this work
 
+pairs.df<-data.table(read.csv(gzfile("~/Dropbox/epidemics4share/paired.o"),header=F,skip=0, sep=" ", col.names=c("user.a","user.b","start.s","end.s")))
+pairs.df$duration <- pairs.df$end.s - pairs.df$start.s
 # calc connection durations
 montreal.df$duration <- montreal.df$end.s - montreal.df$start.s
 
@@ -48,23 +55,6 @@ montreal.df[which(montreal.df$duration < 0),c("start.s","end.s")] <- montreal.df
 montreal.df[which(montreal.df$duration < 0),"duration"] <- -montreal.df[which(montreal.df$duration < 0),"duration"]
 ## delete alternative: montreal.df <- subset(montreal.df, duration > 0)
 ## another alternative: insert a mean-duration event centered between the start and end?
-
-montreal.df[which]
-
-consolidate.df <- aggregate(start.s ~ loc.id + user.id + end.s, montreal.df, min) ## for identical ends, consolidate starts
-consolidate.df <- aggregate(end.s ~ loc.id + user.id + start.s, consolidate.df, max) ## for identical starts, consolidate ends
-
-dt <- data.table(consolidate.df)
-setkey(dt, start.s, end.s, loc.id, user.id)
-
-for (i in 1:10) {
-  dt[ user.id == dt[i]$user.id & loc.id == dt[i]$loc.id & start.s < dt[i]$end.s, max := max(c(end.s,dt[i]$end.s)) ]
-  #set(dt, i, 4L, max)
-}
-
-
-aggregate(cbind(start.s, end.s) ~ loc.id + user.id, consolidate.df[1:10,], print)
-#consolidate.df <- aggregate(cbind(start.s, end.s) ~ loc.id + user.id + end.s, notnas.df[1:10,], sum)
 
 if (plotting) {
   hour <- 60*60
@@ -145,21 +135,11 @@ betweener<-function(start, end) {
 
 edger<-function(start,end,df) { ## spanner may be irrelevant, if we are removing intervals w/ duration > bin width
   b<-betweener(start, end); # s<-spanner(start, end) # to user spanner: | s(start.s, end.s)
-  hold <- unique(subset(df, b(start.s) | b(end.s), select=c("user.id","loc.id")))
-  ## get the relevant user.id <-> loc.id combos
-  hold <- subset(hold, table(hold$loc.id)[paste(hold$loc.id)] > 1)
-  ## exclude the locations with only one visitor
-  
-  if(dim(hold)[1] == 0) {
-    matrix(nrow=0,ncol=2)
+  slice <- subset(df, b(start.s) | b(end.s), select=c("user.a","user.b"))
+  if (dim(slice)[1]!=0) {
+    unique(slice)
   } else {
-    hold <- aggregate(hold$user.id, by=list(loc.id=hold$loc.id), combn, m=2)$x
-    if ( !is.null(dim(hold)) ) {
-      matrix(hold, ncol=2, byrow=T)
-    } else {
-      t(unique(Reduce(cbind, hold), MARGIN=2))
-    }
-    
+    matrix(nrow=0, ncol=2)
   }
 }
 
@@ -182,7 +162,7 @@ processer <- function(wr) {
 
 starts <- breaks[-length(breaks)]
 ends <- breaks[-1]
-daySpan <- 90
+daySpan <- 365
 startDays <- seq(1, length(starts), by=daySpan)
 endDays <- startDays + daySpan
 endDays <- endDays - 1
@@ -191,7 +171,7 @@ endDays[length(endDays)]<-length(starts)
 #head(ends[endDays]) - head(starts[startDays])
 #tail(ends[endDays]) - tail(starts[startDays])
 fname <- paste("day",daySpan,"els.o", sep="")
-invisible(mapply(processer(writer(fname)), starts[startDays], ends[endDays], MoreArgs=list(df=montreal.df)))
+invisible(mapply(processer(writer(fname)), starts[startDays], ends[endDays], MoreArgs=list(df=pairs.df)))
 
 # loc.cutoff <- subset(aggregate(rep.int(1,dim(montreal.df)[1]), by=list(loc.id = montreal.df$loc.id, end.s = montreal.df$end.s), sum), x > 1)
 # loc.cutoff <- loc.cutoff[with(loc.cutoff,order(x,loc.id)),]
