@@ -1,34 +1,47 @@
-setwd("~/Dropbox/epidemics4share/")
+#setwd("~/Dropbox/epidemics4share/")
 origin <- as.POSIXct(strptime('2004-01-01 00:00:00', '%Y-%m-%d %H:%M:%S'))
-require(data.table)
+
 ## time zero in the data.  first actual data point is later in 2004
 debug <- F; plotting <- F
 ## flag for the interactive portions of the script
 
-#con <- gzfile("~/Dropbox/montreal.tgz") # since close irrelevant, don't need to hold on to con?
-montreal.df<-data.table(read.csv(gzfile("~/Dropbox/montreal.tgz"),header=F,skip=1, sep=",", col.names=c("user.id","loc.id","start.s","end.s")))
-# close(con) # apparently unnecessary for gzfile?
-setkey(montreal.df, start.s, end.s, user.id, loc.id)
-montreal.df[is.na(end.s), end.s := start.s]
-montreal.df[end.s < start.s, temp := end.s][ !is.na(temp) , end.s := start.s][ !is.na(temp), start.s := temp ]
-montreal.df$temp <- NULL
-# TODO use data.table for these
-consolidate.df <- aggregate(start.s ~ user.id + loc.id +  end.s, montreal.df, min) ## for identical ends, consolidate starts
-consolidate.df <- aggregate(end.s ~ user.id + loc.id + start.s, consolidate.df, max)
-write.table(consolidate.df, file="testdt.o", row.names=F, col.names=F)
+preProcess<-function() {
+  require(data.table)
+  #con <- gzfile("~/Dropbox/montreal.tgz") # since close irrelevant, don't need to hold on to con?
+  montreal.df<-data.table(read.csv(gzfile("~/Dropbox/montreal.tgz"),header=F,skip=1, sep=",", col.names=c("user.id","loc.id","start.s","end.s")))
+  # close(con) # apparently unnecessary for gzfile?
+  setkey(montreal.df, start.s, end.s, user.id, loc.id)
+  montreal.df[is.na(end.s), end.s := start.s]
+  montreal.df[end.s < start.s, temp := end.s][ !is.na(temp) , end.s := start.s][ !is.na(temp), start.s := temp ]
+  montreal.df$temp <- NULL
+  # TODO use data.table for these
+  consolidate.df <- aggregate(start.s ~ user.id + loc.id +  end.s, montreal.df, min) ## for identical ends, consolidate starts
+  consolidate.df <- aggregate(end.s ~ user.id + loc.id + start.s, consolidate.df, max)
+}
+if (!exists("consolidate.df")) consolidate.df <- preProcess()
 
+merged.df<-data.table(read.csv("~/Dropbox/epidemics4share/merged.o",header=F,skip=1, sep=" ", col.names=c("user.id","loc.id","start.s","end.s")))
+
+store<-function(ref.rf) {
+  write.table(ref.df, file="testdt.o", row.names=F, col.names=F)
+}
 # at this point, defer to languages more amenable to this sort of this work
 
-pairs.df<-data.table(read.csv(gzfile("~/Dropbox/epidemics4share/paired.o"),header=F,skip=0, sep=" ", col.names=c("user.a","user.b","start.s","end.s")))
-pairs.df$duration <- pairs.df$end.s - pairs.df$start.s
+if (!exists("pairs.df")) {
+  require(data.table)
+  pairs.df<-data.table(read.csv(gzfile("~/Dropbox/epidemics4share/paired.o"),header=F,skip=0, sep=" ", col.names=c("user.a","user.b","start.s","end.s")))
+  pairs.df$duration <- pairs.df$end.s - pairs.df$start.s
+}
 # calc connection durations
-montreal.df$duration <- montreal.df$end.s - montreal.df$start.s
 
 ## addressing duration < 0
 ## resolution based on output of below logic:
 ## given the small number of these,
 ## and the unclear provenance, 
 ## resolve by manual inspection where duration < 0
+## for our data, these all indicate "SWAP":
+## delete alternative: montreal.df <- subset(montreal.df, duration > 0)
+## another alternative: insert a mean-duration event centered between the start and end?
 if (debug) dump<-apply(subset(montreal.df,duration<0),1,function(row) {
   tot<-subset(montreal.df, user.id == row["user.id"] & loc.id == row["loc.id"] & start.s != row["start.s"] & end.s != row["end.s"] )
   if(dim(tot)[1] == 0) {
@@ -50,25 +63,6 @@ if (debug) dump<-apply(subset(montreal.df,duration<0),1,function(row) {
   }
 })
 
-## for our data, these all indicate "SWAP":
-montreal.df[which(montreal.df$duration < 0),c("start.s","end.s")] <- montreal.df[which(montreal.df$duration < 0),c("end.s","start.s")]
-montreal.df[which(montreal.df$duration < 0),"duration"] <- -montreal.df[which(montreal.df$duration < 0),"duration"]
-## delete alternative: montreal.df <- subset(montreal.df, duration > 0)
-## another alternative: insert a mean-duration event centered between the start and end?
-
-if (plotting) {
-  hour <- 60*60
-  window <- 0.5 # half hour
-  xscale<-1/10000
-  hist.data <- hist(subset(montreal.df,!is.na(end.s))$end.s/hour, breaks=seq(min(montreal.df$end.s,na.rm=T), max(montreal.df$end.s,na.rm=T)+window*hour, by=window*hour)/hour, plot=F )
-  hist.starts <- hist(montreal.df$start.s/hour, breaks=seq(min(montreal.df$start.s,na.rm=T), max(montreal.df$start.s,na.rm=T)+window*hour, by=window*hour)/hour, plot=F )
-  
-  maxMax <- max(montreal.df$end.s,na.rm=T)
-  optMax <- function(x) ifelse(any(!is.na(x)),max(x,na.rm=T),maxMax)
-  
-  minMin <- min(montreal.df$start.s,na.rm=T)
-  optMin <- function(x) ifelse(any(!is.na(x)),min(x,na.rm=T),minMin)
-  
   aggregator <- function(df, tarkey, aggkey, fun) {
     by <- list(); by[[aggkey]] <- df[[aggkey]]
     res <- aggregate(df[[tarkey]], by=by, fun)
@@ -94,33 +88,53 @@ if (plotting) {
     res
   }
   
-  createDestroyNet.lines <- function(df, on, lty, xscale) {
-    create <- aggregator(df, "start.s", on, optMin)
-    destroy <- aggregator(df, "end.s", on, optMax)
+  createDestroyNet.lines <- function(df, on, lty, xscale, lwd=1) {
+    create <- aggregator(df, "start.s", on, min)
+    destroy <- aggregator(df, "end.s", on, max)
     net <- merger(create, destroy, on)
     mapply(function(data, col) {
-      lines(data$time/hour*xscale, data$acc/max(data$acc), col=col, lty=lty)
+      lines(data$time/hour*xscale, data$acc/max(data$acc), col=col, lty=lty, lwd=lwd)
       data ## this makes mapply return list(1 = create, 2 = destroy, 3 = net)
     }, list(create, destroy, net), list("green","red","blue"))
   }
   
-  png("db_overview.png",units=cm,width=10,height=5)
+dataReview<-function(df) {
+  hour <- 60*60
+  window <- 0.5 # half hour
+  xscale<-1/10000
+  
+  ylines <- (unclass(c(as.POSIXct("2005-01-01"), as.POSIXct("2006-01-01"), as.POSIXct("2007-01-01"), as.POSIXct("2008-01-01"), as.POSIXct("2009-01-01"), as.POSIXct("2010-01-01")))-unclass(origin))/60/60*xscale
+  
+  hist.data <- hist(subset(df,!is.na(end.s))$end.s/hour, breaks=seq(min(df$end.s,na.rm=T), max(df$end.s,na.rm=T)+window*hour, by=window*hour)/hour, plot=F )
+  hist.starts <- hist(df$start.s/hour, breaks=seq(min(df$start.s,na.rm=T), max(df$start.s,na.rm=T)+window*hour, by=window*hour)/hour, plot=F )
+  
+  par(mgp=c(1.5,0.25,0), mar=c(3,3,0,0)+0.1,tcl=0.5)
   plot(hist.starts$mids*xscale, hist.starts$counts/max(hist.starts$counts),
-       type="h", bty="n", xlab="10k hours", ylab="%peak", yaxt="n", xaxt="n", col="grey")
+       type="h", bty="n", xlab="10k hours", ylab="%peak", yaxt="n", xaxt="n", col="grey",
+       panel.first=abline(v=ylines, col="lightgrey", lty=3))
   lines(hist.data$mids*xscale, hist.data$counts/max(hist.data$counts),
        type="h")
   
-  axis(2, at=c(0,0.5,1))
+  axis(2, at=c(0,0.5,1), col="lightgrey")
   meh <- pretty(c(min(hist.data$mids),max(hist.data$mids)))*xscale
   meh[1] <- mean(meh[1:2])
   len <- length(meh)
   meh[len] <- mean(meh[(len-1):len])
-  axis(1, at=signif(meh,2)) ## weird - no 1.0, 6.0?
+  axis(1, at=signif(meh,2), col="lightgrey") ## weird - no 1.0, 6.0?
   
-  dump.loc<-createDestroyNet.lines(montreal.df, "loc.id", lty=1, xscale=xscale)
-  dump.user<-createDestroyNet.lines(montreal.df, "user.id", lty=3, xscale=xscale)
-  dev.off()
+  dump.loc<-createDestroyNet.lines(df, "loc.id", lty=1, xscale=xscale)
+  dump.user<-createDestroyNet.lines(df, "user.id", lty=1, lwd=2, xscale=xscale)
+  legend(0.5, 1.0, bty="n",
+         legend=c("logins","logouts","new locations","new users","lost locations","lost users","net locations","net users"),
+         lty=c(1,1,1,1,1,1,1,1),
+         lwd=c(1,1,1,2,1,2,1,2),
+         col=c("grey","black","green","green","red","red","blue","blue"))
+}
 
+if (plotting) {
+  png(filename="dataReview.png",width=15, height=15, units="cm", res=300)
+  dataReview(merged.df)
+  dev.off()
 }
 
 betweener<-function(start, end) {
@@ -144,8 +158,8 @@ edger<-function(start,end,df) { ## spanner may be irrelevant, if we are removing
 }
 
 twid <- 60*60*24 # one day is min break
-first.midnight <- trunc(as.POSIXct(min(montreal.df$start.s,na.rm=T), origin=origin),"days")+0
-last.midnight <- trunc(as.POSIXct(max(montreal.df$end.s,na.rm=T), origin=origin),"days")+twid
+first.midnight <- trunc(as.POSIXct(min(consolidate.df$start.s,na.rm=T), origin=origin),"days")+0
+last.midnight <- trunc(as.POSIXct(max(consolidate.df$end.s,na.rm=T), origin=origin),"days")+twid
 breaks<-seq(unclass(first.midnight), unclass(last.midnight), twid) - unclass(origin)
 
 writer<-function(outputfh) {
@@ -162,59 +176,27 @@ processer <- function(wr) {
 
 starts <- breaks[-length(breaks)]
 ends <- breaks[-1]
-daySpan <- 365
-startDays <- seq(1, length(starts), by=daySpan)
-endDays <- startDays + daySpan
-endDays <- endDays - 1
-endDays[length(endDays)]<-length(starts)
+getStartEnds<-function(daySpan) {
+  startDays <- seq(1, length(starts), by=daySpan)
+  endDays <- startDays + daySpan
+  endDays <- endDays - 1
+  endDays[length(endDays)]<-length(starts)
+  list(starts=starts[startDays], ends=ends[endDays])
+}
 
 #head(ends[endDays]) - head(starts[startDays])
 #tail(ends[endDays]) - tail(starts[startDays])
-fname <- paste("day",daySpan,"els.o", sep="")
-invisible(mapply(processer(writer(fname)), starts[startDays], ends[endDays], MoreArgs=list(df=pairs.df)))
+processPairs<-function(daySpan) {
+  fname <- paste("day",daySpan,"els.o", sep="")
+  ref <- getStartEnds(daySpan)
+  invisible(mapply(processer(writer(fname)), ref$starts, ref$ends, MoreArgs=list(df=pairs.df)))
+}
 
-# loc.cutoff <- subset(aggregate(rep.int(1,dim(montreal.df)[1]), by=list(loc.id = montreal.df$loc.id, end.s = montreal.df$end.s), sum), x > 1)
-# loc.cutoff <- loc.cutoff[with(loc.cutoff,order(x,loc.id)),]
-# #most.cutoff <- unique(subset(loc.cutoff, x > 10, select="loc.id"))
-# #more.cutoff <- subset(montreal.df, loc.id %in% most.cutoff$loc.id)
-# 
-# assessor <- with(montreal.df,{
-#   function(row) any(user.id == row["user.id"] & loc.id != row["loc.id"])
-# })
-# largeAssess<-apply(
-#   unique(subset(montreal.df, duration > (60*60*12),select=c("user.id","loc.id"))),
-#   1,
-#   assessor)
-# 
-# nas.df <- subset(montreal.df, is.na(end.s) )
-# not.na <- !is.na(montreal.df$end.s)
-# nas.df$resolution <- apply(nas.df,1,function(row) {
-#   any(not.na & 
-#         montreal.df$user.id == row["user.id"] &
-#         montreal.df$loc.id == row["loc.id"] &
-#         montreal.df$start.s <= row["start.s"] &
-#         montreal.df$end.s > row["start.s"])
-# })
-# 
-# ## alt:
-# nas.df$resolution <- apply(nas.df,1,function(row) {
-#   hold <- subset(montreal.df, user.id == row["user.id"] & loc.id == row["loc.id"])
-#   overlap <- subset(hold, start.s <= row["start.s"] & end.s > row["start.s"])
-#   ifelse(dim(overlap)[1] != 0, max(overlap$end.s), mean(hold) )
-#   dim(subset(montreal.df, user.id == row["user.id"] ))
-#   any(not.na & 
-#         montreal.df$user.id == row["user.id"] &
-#         montreal.df$loc.id == row["loc.id"] &
-#         montreal.df$start.s <= row["start.s"] &
-#         montreal.df$end.s > row["start.s"])
-# })
-# ## TODO - missing start.s / end.s?
-# sorted.df<-montreal.df[with(montreal.df,order(user.id,start.s,end.s,loc.id)),]
-# sorted.df$duration <- sorted.df$end.s - sorted.df$start.s
-# 
-# hist.data <- hist(log10(subset(sorted.df, !is.na(duration))$duration/60),plot=F)
-# 
-# nas.df <- subset(sorted.df, is.na(end.s) )
-# appearances<-aggregate(rep.int(1,dim(sorted.df)[1]),by=list(user.id=sorted.df$user.id, loc.id=sorted.df$loc.id),"sum")
-# names(appearances)[3]<-"count"
-# sorted.appearances<-appearances[with(appearances,order(user.id, count, loc.id)),]
+daySlices <- array(c(1, 7, 30, 90, 180, 365)) # per day, per week, per month, per quarter, per half year, per year
+
+invisible(apply(daySlices, 1, FUN=function(daySpan){
+  fname <- paste("~/git/EpiFire/examples/day",daySpan,"comp.o", sep="")
+  src<-read.csv(fname,header=F,sep=" ",fill=T, blank.lines.skip=F)
+  srcMax <- max(src, na.rm=T)
+  print(paste(daySpan, ":", srcMax/daySpan))
+}))

@@ -29,7 +29,7 @@
     \begin{block}{Introduction}
 Contact networks are \textbf{intrinsically temporal}, but often analyzed as \textbf{time-aggregated} to simplify analysis and simulation.  Simulation on empirical networks, however, may skip this aggregation with minimal additional complexity.
 
-We consider such simulation on $\mathbf{P\approx 10^6}$\textbf{ nodes}, interacting via $\mathbf{N\approx 10^6}$\textbf{ edges}, over \textbf{5-years of geo-temporal co-location} data, derived from municipal WiFi access at businesses.  We start with a \textbf{review of network measures for different aggregation windows} on that data, and \textbf{conclude comparing simulated infections on these dynamic networks}.
+We consider such simulation on $\mathbf{P\approx 2\times 10^6}$\textbf{ nodes}, interacting via $\mathbf{N\approx 2\times 10^6}$\textbf{ edges}, \textbf{over 5-years} of geo-temporal co-location data, derived from municipal WiFi access at businesses.  We start with a \textbf{review of network measures for different aggregation windows} on that data, and \textbf{conclude comparing simulated infections on these dynamic networks}.
 %     \begin{block}{\large Fontsizes}
 %       \centering
 %       {\tiny tiny}\par
@@ -71,11 +71,26 @@ The aggregation of empirical observations has important implications for simulat
     \spacer{}
     \begin{threeCol}
     \begin{block}{Results}
-    \begin{figure}
-\includegraphics{poster-plotfig1}
+    \begin{columns}
+    \begin{oneCol}
+        \begin{figure}
+    \includegraphics[width=1.0\linewidth]{dataReview.png}
+    \end{figure}   
+    \end{oneCol}
+    \spacer{}
+    \begin{oneCol}
+    \end{oneCol}
+    \spacer{}
+    \begin{oneCol}
+    \end{oneCol}
+    \end{columns}
+%    \begin{figure}
+%<<plotfig1,fig=TRUE,echo=FALSE>>=
+% graph.measure.plotting()
+%@
 %    \includegraphics[width=0.8\linewidth]{placeholder.jpg}
-    \caption{The first figure should be a series of comparisons of network measures (e.g., degree distribution) for the totally aggregated network vs averaged values of the network aggregated at different time periods - 1 year, 1 month, 1 week, 1 day.  May also want to do some heat charts of those measures through time, since the averages might hide neat insights like seasonality.  I also think we could use some plots of something approximating edge weights -- like the distribution of edge duration proportion (time edge exists as fraction of interval).}
-    \end{figure}
+%    \caption{The first figure should be a series of comparisons of network measures (e.g., degree distribution) for the totally aggregated network vs averaged values of the network aggregated at different time periods - 1 year, 1 month, 1 week, 1 day.  May also want to do some heat charts of those measures through time, since the averages might hide neat insights like seasonality.  I also think we could use some plots of something approximating edge weights -- like the distribution of edge duration proportion (time edge exists as fraction of interval).}
+ %   \end{figure}
     \begin{figure}
     \includegraphics[width=0.8\linewidth]{placeholder.jpg}
     \caption{This should be the figure showing the simulation results for aggregation on whole network vs having day-by-day networks.  Probably should be two figures, one for final sizes and one for trajectories.  If we have time, multiples of these for some parameter variation.}
