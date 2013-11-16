@@ -45,7 +45,7 @@ We consider such simulation on $\mathbf{P\approx 2\times 10^6}$\textbf{ nodes}, 
 %       {\VeryHuge VeryHuge}\par
     \end{block}
     \begin{block}{Materials}
-Network analysis and epidemic simulation used EpiFire\cite{hladish2012epifire}.  Visualization and poster prepared with Rweave, source @ \href{https://github.com/pearsonca/epidemics4-talk}{github.com/pearsonca/epidemics4-talk}.
+Data preparation with R and Scala.  Network analysis and epidemic simulation with EpiFire\cite{hladish2012epifire}.  Visualization and poster with R and Rweave.  Source @ \href{https://github.com/pearsonca/epidemics4-talk}{github.com/pearsonca/epidemics4-talk}.
     \end{block}
     \begin{block}{Methods}
 Network measures computed in the standard way, after edges are determined on a per-time-period basis.  An edge exists between individuals if their access periods at a location overlap during a time period.
@@ -105,18 +105,24 @@ graph.measure.plotting <- function(.path=".",
 #   axis(1,outer=T,at=c(tticks$xlim[1],tticks$x,tticks$xlim[2]))
 }
 @
-    \begin{block}{Results}
+    \begin{block}{Source Data Overview}
     \begin{columns}
     \begin{oneCol}
-        \begin{figure}
-    \includegraphics[width=1.0\linewidth]{dataReview.png}
-    \end{figure}   
+      \begin{figure}
+        \includegraphics[width=1.0\linewidth]{dataReview.png}
+      \end{figure}   
     \end{oneCol}
-    \spacer{}
+    %\spacer{}
     \begin{oneCol}
+      \begin{figure}
+        \includegraphics[width=1.0\linewidth]{maxComp.png}
+      \end{figure}   
     \end{oneCol}
-    \spacer{}
+    %\spacer{}
     \begin{oneCol}
+      \begin{figure}
+        \includegraphics[width=1.0\linewidth]{maxEdges.png}
+      \end{figure}   
     \end{oneCol}
     \end{columns}
 %    \begin{figure}

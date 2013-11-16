@@ -105,30 +105,25 @@ dataReview<-function(df) {
   
   ylines <- (unclass(c(as.POSIXct("2005-01-01"), as.POSIXct("2006-01-01"), as.POSIXct("2007-01-01"), as.POSIXct("2008-01-01"), as.POSIXct("2009-01-01"), as.POSIXct("2010-01-01")))-unclass(origin))/60/60*xscale
   
-  hist.data <- hist(subset(df,!is.na(end.s))$end.s/hour, breaks=seq(min(df$end.s,na.rm=T), max(df$end.s,na.rm=T)+window*hour, by=window*hour)/hour, plot=F )
+  #hist.data <- hist(subset(df,!is.na(end.s))$end.s/hour, breaks=seq(min(df$end.s,na.rm=T), max(df$end.s,na.rm=T)+window*hour, by=window*hour)/hour, plot=F )
   hist.starts <- hist(df$start.s/hour, breaks=seq(min(df$start.s,na.rm=T), max(df$start.s,na.rm=T)+window*hour, by=window*hour)/hour, plot=F )
   
   par(mgp=c(1.5,0.25,0), mar=c(3,3,0,0)+0.1,tcl=0.5)
   plot(hist.starts$mids*xscale, hist.starts$counts/max(hist.starts$counts),
-       type="h", bty="n", xlab="10k hours", ylab="%peak", yaxt="n", xaxt="n", col="grey",
+       type="h", bty="n", xlab="", lwd=0.5, ylab="%peak", yaxt="n", xaxt="n", col="grey",
        panel.first=abline(v=ylines, col="lightgrey", lty=3))
-  lines(hist.data$mids*xscale, hist.data$counts/max(hist.data$counts),
-       type="h")
+  #lines(hist.data$mids*xscale, hist.data$counts/max(hist.starts$counts), type="h", lwd=0.5)
   
   axis(2, at=c(0,0.5,1), col="lightgrey")
-  meh <- pretty(c(min(hist.data$mids),max(hist.data$mids)))*xscale
-  meh[1] <- mean(meh[1:2])
-  len <- length(meh)
-  meh[len] <- mean(meh[(len-1):len])
-  axis(1, at=signif(meh,2), col="lightgrey") ## weird - no 1.0, 6.0?
+  axis(1, at=ylines, lwd=0, labels=c("2005","2006","2007","2008","2009","2010"), col="lightgrey") ## weird - no 1.0, 6.0?
   
   dump.loc<-createDestroyNet.lines(df, "loc.id", lty=1, xscale=xscale)
   dump.user<-createDestroyNet.lines(df, "user.id", lty=1, lwd=2, xscale=xscale)
   legend(0.5, 1.0, bty="n",
-         legend=c("logins","logouts","new locations","new users","lost locations","lost users","net locations","net users"),
-         lty=c(1,1,1,1,1,1,1,1),
-         lwd=c(1,1,1,2,1,2,1,2),
-         col=c("grey","black","green","green","red","red","blue","blue"))
+         legend=c("logins","new locations","new users","lost locations","lost users","net locations","net users"),
+         lty=c(1,1,1,1,1,1,1),
+         lwd=c(1,1,2,1,2,1,2),
+         col=c("grey","green","green","red","red","blue","blue"))
 }
 
 if (plotting) {
@@ -181,7 +176,7 @@ getStartEnds<-function(daySpan) {
   endDays <- startDays + daySpan
   endDays <- endDays - 1
   endDays[length(endDays)]<-length(starts)
-  list(starts=starts[startDays], ends=ends[endDays])
+  list(starts=starts[startDays], ends=ends[endDays], mids=(starts[startDays]+ends[endDays])/2)
 }
 
 #head(ends[endDays]) - head(starts[startDays])
@@ -194,9 +189,75 @@ processPairs<-function(daySpan) {
 
 daySlices <- array(c(1, 7, 30, 90, 180, 365)) # per day, per week, per month, per quarter, per half year, per year
 
-invisible(apply(daySlices, 1, FUN=function(daySpan){
-  fname <- paste("~/git/EpiFire/examples/day",daySpan,"comp.o", sep="")
-  src<-read.csv(fname,header=F,sep=" ",fill=T, blank.lines.skip=F)
-  srcMax <- max(src, na.rm=T)
-  print(paste(daySpan, ":", srcMax/daySpan))
-}))
+uniqueUCount <- length(unique(merged.df$user.id))
+if (plotting) {
+  png(filename="maxComp.png",width=15, height=15, units="cm", res=300)
+  par(mgp=c(1.5,0.25,0), mar=c(3,3,0,0)+0.1,tcl=0.5)
+  xscale=1/10000
+  ylines <- (unclass(c(as.POSIXct("2005-01-01"), as.POSIXct("2006-01-01"), as.POSIXct("2007-01-01"), as.POSIXct("2008-01-01"), as.POSIXct("2009-01-01"), as.POSIXct("2010-01-01")))-unclass(origin))/60/60*xscale
+  plot(NA, ylim=c(0,550), xlim=c(0.5,5.5), bty="n", xlab="", ylab="peak component size / aggregate time", yaxt="n", xaxt="n", panel.first=abline(v=ylines, col="lightgrey", lty=3))
+  cols <- gray.colors(length(daySlices), start=0.7, end=0.1)
+  ref<-mapply(function(daySpan, col, lwd){
+    fname <- paste("~/git/EpiFire/examples/day",daySpan,"comp.o", sep="")
+    results.list <- lapply(strsplit(readLines(fname)," "), as.integer)
+    maxes<-sapply(results.list,function(x) max(c(x,0)))
+    se<-getStartEnds(daySpan)
+    lines(se$mids/60/60*xscale, maxes/daySpan, col=col, lwd=lwd)
+    list(maxes=maxes, days=daySpan)
+  }, daySlices, cols, c(0.2, rep.int(1,length(daySlices)-1)) )
+  axis(2, at=pretty(c(1,550)), col="lightgrey")
+  axis(1, at=ylines, lwd=0, labels=c("2005","2006","2007","2008","2009","2010"), col="lightgrey")
+  legend(0.5, 550, bty="n",
+         legend=c("daily","weekly","monthly","quarterly","biannualy","yearly"),
+         col= cols, lty=1)
+  dev.off()
+  
+  png(filename="maxEdges.png",width=15, height=15, units="cm", res=300)
+  par(mgp=c(1.5,0.25,0), mar=c(3,3,0,0)+0.1,tcl=0.5)
+  xscale=1/10000
+  peak<-5000
+  ylines <- (unclass(c(as.POSIXct("2005-01-01"), as.POSIXct("2006-01-01"), as.POSIXct("2007-01-01"), as.POSIXct("2008-01-01"), as.POSIXct("2009-01-01"), as.POSIXct("2010-01-01")))-unclass(origin))/60/60*xscale
+  plot(NA, xlim=c(0.5,5.5), ylim=c(5,peak), 
+       bty="n", xlab="", ylab="peak degrees", xaxt="n", 
+       panel.first=abline(v=ylines, col="lightgrey", lty=3),
+       fg="lightgrey", log="y"
+       )
+  cols <- gray.colors(length(daySlices), start=0.7, end=0.1)
+  ref<-mapply(function(daySpan, col, lwd){
+    fname <- paste("~/git/EpiFire/examples/day",daySpan,"edges.o", sep="")
+    results.list <- sapply(lapply(strsplit(readLines(fname)," "), as.integer), length)
+    se<-getStartEnds(daySpan)
+    y <-  results.list #/ifelse(daySpan == 1,1,log(daySpan,1.3))
+    lines(se$mids/60/60*xscale, y, col=col, lwd=lwd)
+  }, daySlices, cols, c(0.2, rep.int(1,length(daySlices)-1)) )
+  axis(1, at=ylines, lwd=0, labels=c("2005","2006","2007","2008","2009","2010"), col="lightgrey")
+  legend(0.5, peak, bty="n",
+         legend=c("daily","weekly","monthly","quarterly","biannualy","yearly"),
+         col= cols, lty=1)
+  dev.off()
+}
+ ## weird - no 1.0, 6.0?
+
+ref<-lapply(daySlices, function(daySpan){
+  fname <- paste("~/git/EpiFire/examples/day",daySpan,"edges.o", sep="")
+  results.list <- sapply(lapply(strsplit(readLines(fname)," "), as.integer), length)
+  list(rs=results.list)
+#   maxes<-sapply(results.list,function(x) max(c(x,0)))
+#   se<-getStartEnds(daySpan)
+#   lines(se$mids/60/60*xscale, maxes/daySpan, col=col, lwd=lwd)
+#   list(maxes=maxes, days=daySpan)
+})
+
+maxMax <- Reduce(function(m,l) max(m, l$max/l$days), ref, 0)
+compSizeBreaks <- 0:ceiling(maxMax)
+zeroEntry <- array(rep.int(0, length(compSizeBreaks)))
+
+ref2<-lapply(ref, function(l) {
+ Reduce(rbind, sapply(l$rl, function(rs) {
+    if(length(rs) != 0) {
+      hist(rs/l$days, compSizeBreaks, plot=F)$counts / uniqueUCount
+    } else {
+      zeroEntry
+    }
+  }),matrix(nrow=0, ncol=length(zeroEntry)))
+})
