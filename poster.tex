@@ -16,11 +16,9 @@
   
   \newenvironment{oneCol}{\begin{column}[t]{0.225\paperwidth}}{\end{column}}
   \newenvironment{threeCol}{\begin{column}[t]{0.715\paperwidth}}{\end{column}}
-  
+  \setbeamertemplate{caption}[numbered]
 \usepackage{Sweave}
 \begin{document}
-
-
 \input{poster-concordance}
   \begin{frame}{}
     \begin{columns}[t]
@@ -43,7 +41,7 @@ We consider such simulation on $\mathbf{\approx 2\times 10^6}$\textbf{ nodes}, i
 %       {\VeryHuge VeryHuge}\par
     \end{block}
     \begin{block}{Materials}
-Data preparation with R and Scala.  Network analysis and epidemic simulation with EpiFire\cite{hladish2012epifire} (new features to be formally documented in future publication, development code now available).  Visualization and poster with R and Rweave.  Source @ \href{https://github.com/pearsonca/epidemics4-talk}{github.com/pearsonca/epidemics4-talk}.
+Data preparation with R and Scala.  Network analysis and epidemic simulation with EpiFire\cite{hladish2012epifire} (new features to be formally documented in future publication, development code now available).  Visualization and poster with R and \LaTeX; non-EpiFire source @ \href{https://github.com/pearsonca/epidemics4-talk}{github.com/pearsonca/epidemics4-talk}.
     \end{block}
     \begin{block}{Methods}
 The raw data have three issues: some logouts before logins, missing logout times, and overlapping logins for a single user at a location.  The first issue was resolved by swapping the times; this affected $\approx 10$ rows, and the swapped durations were consistent with other durations for those users.  For the missing logout times, we set them to their login times; this still allows those visits to intersect with other users.  Finally, we union each user's login periods to address concurrent use from multiple devices.
@@ -98,120 +96,43 @@ The aggregation window for social network observations can determine the type of
     \begin{columns}
     \begin{oneCol}
       \begin{figure}
+        \caption{Contacts Binned Daily}
         \includegraphics[width=1.0\linewidth]{out1.png}
       \end{figure}
       \begin{figure}
         \includegraphics[width=1.0\linewidth]{out90.png}
+        \caption{Contacts Binned Quarterly}
       \end{figure}  
     \end{oneCol}
     %\spacer{}
     \begin{oneCol}
       \begin{figure}
+        \caption{Contacts Binned Weekly}
         \includegraphics[width=1.0\linewidth]{out7.png}
       \end{figure}
       \begin{figure}
         \includegraphics[width=1.0\linewidth]{out180.png}
+        \caption{Contacts Binned Biannually}
       \end{figure}  
     \end{oneCol}
     %\spacer{}
     \begin{oneCol}
       \begin{figure}
+        \caption{Contacts Binned Monthly}
         \includegraphics[width=1.0\linewidth]{out30.png}
       \end{figure}  
       \begin{figure}
         \includegraphics[width=1.0\linewidth]{out365.png}
+        \caption{Contacts Binned Yearly}
       \end{figure}  
     \end{oneCol}
     \end{columns}
-    
-%    \begin{figure}
-%<<plotfig1,fig=TRUE,echo=FALSE>>=
-% graph.measure.plotting()
-%@
-%    \includegraphics[width=0.8\linewidth]{placeholder.jpg}
-%    \caption{The first figure should be a series of comparisons of network measures (e.g., degree distribution) for the totally aggregated network vs averaged values of the network aggregated at different time periods - 1 year, 1 month, 1 week, 1 day.  May also want to do some heat charts of those measures through time, since the averages might hide neat insights like seasonality.  I also think we could use some plots of something approximating edge weights -- like the distribution of edge duration proportion (time edge exists as fraction of interval).}
- %   \end{figure}
-    
     \end{block}
-    
+    \begin{block}{Discussion}
+    For the daily re-alignment of connections (fig. 1), epidemics are rare, likely because the network is too sparsely connected at this aggregation level.  For the weekly re-alignment (fig. 2), epidemics typically occur once per simulation, in waves that correspond to the seasonal dynamics in the raw data.  With the only-monthly re-alignment (fig. 3), sustained transmission becomes possible, often with biannual peaks.  For the larger quarterly window (fig. 4), epidemics are usually single-peaked. Large epidemics do not occur close together, perhaps because of the duration of herd immunity.  For the biannual bins (fig. 5), epidemics are common, but do not occur more than once per 180-day bin. Apparent two-wave epidemics are likely artifacts of binning.  For the full year bins (fig. 6), epidemics tend to be large and occur shortly after the beginning of the year, when edges have been updated. Updated edges may bring susceptible individuals into large components, marginalizing population-level immunity. Immunity duration prevents multiple epidemics per year.
+    \end{block}
     \end{threeCol}
     \spacer{}
     \end{columns}
   \end{frame}
   \end{document}
- 
-
-
-
-% 
-% 
-% %----------------------------------------------------------------------------------------
-% %	ADDITIONAL INFORMATION
-% %----------------------------------------------------------------------------------------
-% 
-% \begin{block}{Additional Information}
-% 
-% Maecenas ultricies feugiat velit non mattis. Fusce tempus arcu id ligula varius dictum. 
-% \begin{itemize}
-% \item Curabitur pellentesque dignissim
-% \item Eu facilisis est tempus quis
-% \item Duis porta consequat lorem
-% \end{itemize}
-% 
-% \end{block}
-% 
-% %----------------------------------------------------------------------------------------
-% %	REFERENCES
-% %----------------------------------------------------------------------------------------
-% 
-% \begin{block}{References}
-% 
-% \nocite{*} % Insert publications even if they are not cited in the poster
-% \small{\bibliographystyle{unsrt}
-% \bibliography{sample}\vspace{0.75in}}
-% 
-% \end{block}
-% 
-% %----------------------------------------------------------------------------------------
-% %	ACKNOWLEDGEMENTS
-% %----------------------------------------------------------------------------------------
-% 
-% \setbeamercolor{block title}{fg=red,bg=white} % Change the block title color
-% 
-% \begin{block}{Acknowledgements}
-% 
-% \small{\rmfamily{Thank the data source + ARO grant that's paying for CABP to attend.}} \\
-% 
-% \end{block}
-% 
-% %----------------------------------------------------------------------------------------
-% %	CONTACT INFORMATION
-% %----------------------------------------------------------------------------------------
-% 
-% \setbeamercolor{block alerted title}{fg=black,bg=norange} % Change the alert block title colors
-% \setbeamercolor{block alerted body}{fg=black,bg=white} % Change the alert block body colors
-% 
-% \begin{alertblock}{Contact Information}
-% 
-% \begin{itemize}
-% \item Web: \href{http://github.com/pearsonca/epidemics-4talk}{http://github.com/pearsonca/epidemics-4talk}
-% \item Email: \href{mailto:cap10@ufl.edu}{cap10@ufl.edu}, \href{mailto:thladish@ufl.edu}{thladish@ufl.edu}
-% \end{itemize}
-% 
-% \end{alertblock}
-% 
-% \begin{center}
-% \begin{tabular}{ccc}
-% \includegraphics[width=0.4\linewidth]{logo.png} & \hfill & \includegraphics[width=0.4\linewidth]{logo.png}
-% \end{tabular}
-% \end{center}
-% 
-% %----------------------------------------------------------------------------------------
-% 
-% \end{column} % End of the third column
-% 
-% \end{columns} % End of all the columns in the poster
-% 
-% \end{frame} % End of the enclosing frame
-% 
-% \end{document}
