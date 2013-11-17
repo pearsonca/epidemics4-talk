@@ -55,7 +55,7 @@ The epidemic is an \textbf{S$\rightarrow$E$\rightarrow$I$\rightarrow$R$\rightarr
 \item and the infectious seeding rate, $\sigma_I = 0.1$ per day
 \end{itemize}
 
-We selected $\mu$, $\gamma$, and $\omega$ from literature estimates for influenza.  The resistant (immune) duration is the same for all individuals; other state durations are exponentially distributed.  As each individual is infected, contact and state transition times are generated.  As time passes, edges are added and removed when binning boundaries are reached.  At contact times, a contact is chosen from the edges that exist at that moment. 
+We selected $\mu$, $\gamma$, and $\omega$ from literature estimates for influenza.  The resistant (immune) duration is the same for all individuals; other state durations are exponentially distributed.  As each individual is infected, contact and state transition times are generated.  As time passes, edges are added and removed when binning boundaries are reached.  At contact times, a contact is chosen from an individual's neighbors at that moment. 
     \end{block}
     \begin{block}{Conclusion}
 The aggregation window for social network observations can determine the type of infectious dynamics that are possible to simulate for given parameters.
