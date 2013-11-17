@@ -130,6 +130,11 @@ dataReview<-function(df) {
 if (plotting) {
   png(filename="dataReview.png",width=15, height=15, units="cm", res=300)
   users.list <- dataReview(merged.df)
+  userCounts <- data.table(users.list[[3]]$time, users.list[[3]]$acc)
+  setkey(userCounts,V1)
+  net.users<-sapply(ends, function(e) userCounts[V1 < e, tail(V2,n=1)])
+  net.users<-c(1,1,net.users)
+  net.users<-net.users[-2025] ## deal with div 0 issues
   dev.off()
 }
 
@@ -251,15 +256,16 @@ mapply(function(input, output){
   #i<-apply(array(data$I,c(obsPerRun,1,runCount)), 1:2, extract)
   #r<-apply(array(data$R,c(obsPerRun,1,runCount)), 1:2, extract)
   #dis<-e+i
-  maxComparts<-max(ei)
-#   png(output, width=15, height=15, units="cm", res=300)
-  plot(NA,ylim=c(0, maxComparts), xlim=c(0,2023), xlab="", ylab="", xaxt="n")
+  maxComparts<-max(ei[2,180:(2024-90),]/net.users[180:(2024-90)])
+  png(output, width=15, height=15, units="cm", res=300)
+  plot(NA,ylim=c(0, maxComparts), xlim=c(0+180,2023-90), xlab="years", ylab="% net users", xaxt="n")
   invisible(mapply(function(pop, col){
-    lines(days, pop[1,,], col=col)
-    lines(days, pop[2,,], col=col)
+    lines(days, pop[1,,]/net.users, col=col)
+    lines(days, pop[2,,]/net.users, col=col)
   }, list(ei), c("lightgrey")))
   ref<-array(data$E+data$I,c(obsPerRun,1,runCount))
-  invisible(mapply(function(ran, col){ lines(days,ref[,1,sample(1000,1)],col=col, lwd=3) }, sample(1000,5,replace=F), rainbow(5)))
-  axis(1,at=seq(0,2023,365))
-#   dev.off()
-}, c("~/Downloads/everything/30.o"), c("out.png"))
+  invisible(mapply(function(ran, col){ lines(days,ref[,1,sample(1000,1)]/net.users,col=col, lwd=3) }, sample(1000,5,replace=F), rainbow(5)))
+  ats<-seq(0,2023,365)
+  axis(1,at=ats,labels=seq(0,length(ats)-1))
+  dev.off()
+}, paste("~/Downloads/everything/",daySlices,".o",sep=""), paste("out",daySlices,".png",sep=""))
