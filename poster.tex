@@ -95,10 +95,12 @@ The aggregation window for social network observations can determine the type of
     \begin{block}{Results}
     \begin{columns}
     \begin{oneCol}
+      \setcounter{figure}{0}
       \begin{figure}
         \caption{Contacts Binned Daily}
         \includegraphics[width=1.0\linewidth]{out1.png}
       \end{figure}
+      \setcounter{figure}{3}
       \begin{figure}
         \includegraphics[width=1.0\linewidth]{out90.png}
         \caption{Contacts Binned Quarterly}
@@ -106,10 +108,12 @@ The aggregation window for social network observations can determine the type of
     \end{oneCol}
     %\spacer{}
     \begin{oneCol}
+      \setcounter{figure}{1}
       \begin{figure}
         \caption{Contacts Binned Weekly}
         \includegraphics[width=1.0\linewidth]{out7.png}
       \end{figure}
+      \setcounter{figure}{4}
       \begin{figure}
         \includegraphics[width=1.0\linewidth]{out180.png}
         \caption{Contacts Binned Biannually}
@@ -117,10 +121,12 @@ The aggregation window for social network observations can determine the type of
     \end{oneCol}
     %\spacer{}
     \begin{oneCol}
+      \setcounter{figure}{2}
       \begin{figure}
         \caption{Contacts Binned Monthly}
         \includegraphics[width=1.0\linewidth]{out30.png}
-      \end{figure}  
+      \end{figure}
+      \setcounter{figure}{5}
       \begin{figure}
         \includegraphics[width=1.0\linewidth]{out365.png}
         \caption{Contacts Binned Yearly}
@@ -129,7 +135,7 @@ The aggregation window for social network observations can determine the type of
     \end{columns}
     \end{block}
     \begin{block}{Discussion}
-    For the daily re-alignment of connections (fig. 1), epidemics are rare, likely because the network is too sparsely connected at this aggregation level.  For the weekly re-alignment (fig. 2), epidemics typically occur once per simulation, in waves that correspond to the seasonal dynamics in the raw data.  With the only-monthly re-alignment (fig. 3), sustained transmission becomes possible, often with biannual peaks.  For the larger quarterly window (fig. 4), epidemics are usually single-peaked. Large epidemics do not occur close together, perhaps because of the duration of herd immunity.  For the biannual bins (fig. 5), epidemics are common, but do not occur more than once per 180-day bin. Apparent two-wave epidemics are likely artifacts of binning.  For the full year bins (fig. 6), epidemics tend to be large and occur shortly after the beginning of the year, when edges have been updated. Updated edges may bring susceptible individuals into large components, marginalizing population-level immunity. Immunity duration prevents multiple epidemics per year.
+    For the daily re-alignment of connections (Fig. 1), epidemics are rare, likely because the network is too sparsely connected at this aggregation level.  For the weekly re-alignment (Fig. 2), epidemics typically occur once per simulation, in waves that correspond to the seasonal dynamics in the raw data.  With the monthly re-alignment (Fig. 3), sustained transmission becomes possible, often with biannual peaks.  For the larger quarterly window (Fig. 4), epidemics are usually single-peaked. Large epidemics do not occur close together, perhaps because of the duration of herd immunity.  For the biannual bins (Fig. 5), epidemics are common, but do not occur more than once per 180-day bin. Apparent two-wave epidemics are likely artifacts of binning.  For the full year bins (Fig. 6), epidemics tend to be large and occur shortly after the beginning of the year, when edges have been updated. Updated edges may bring susceptible individuals into large components, marginalizing population-level immunity. Immunity duration prevents multiple epidemics per year.
     \end{block}
     \end{threeCol}
     \spacer{}
