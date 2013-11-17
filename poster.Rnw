@@ -31,7 +31,7 @@ defPar <- par()
     \begin{block}{Introduction}
 Contact networks are \textbf{intrinsically temporal}, but often analyzed as \textbf{time-aggregated} to simplify analysis and simulation.  Simulation on empirical networks, however, can incorporate temporal changes with minimal additional complexity.
 
-We consider such simulation on $\mathbf{\~ 2\times 10^6}$\textbf{ nodes}, interacting via $\mathbf{\~ 2\times 10^6}$\textbf{ edges}, \textbf{over 5-years} of geo-temporal co-location data, derived from municipal WiFi access at businesses in Montreal\cite{hoen2013montreal}.  We start with a \textbf{review of network measures for different aggregation windows} on that data, and \textbf{conclude comparing simulated infections on these dynamic networks}.
+We consider such simulation on $\mathbf{\approx 2\times 10^6}$\textbf{ nodes}, interacting via $\mathbf{\approx 2\times 10^6}$\textbf{ edges}, \textbf{over 5-years} of geo-temporal co-location data, derived from municipal WiFi access at businesses in Montreal\cite{hoen2013montreal}.  We start with a \textbf{review of network measures for different aggregation windows} on that data, and \textbf{conclude comparing simulated infections on these dynamic networks}.
 %     \begin{block}{\large Fontsizes}
 %       \centering
 %       {\tiny tiny}\par
