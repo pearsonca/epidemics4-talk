@@ -128,6 +128,38 @@ graph.measure.plotting <- function(.path=".",
       \end{figure}   
     \end{oneCol}
     \end{columns}
+    \end{block}
+    
+    \begin{block}{Results}
+    \begin{columns}
+    \begin{oneCol}
+      \begin{figure}
+        \includegraphics[width=1.0\linewidth]{out1.png}
+      \end{figure}
+      \begin{figure}
+        \includegraphics[width=1.0\linewidth]{out90.png}
+      \end{figure}  
+    \end{oneCol}
+    %\spacer{}
+    \begin{oneCol}
+      \begin{figure}
+        \includegraphics[width=1.0\linewidth]{out7.png}
+      \end{figure}
+      \begin{figure}
+        \includegraphics[width=1.0\linewidth]{out180.png}
+      \end{figure}  
+    \end{oneCol}
+    %\spacer{}
+    \begin{oneCol}
+      \begin{figure}
+        \includegraphics[width=1.0\linewidth]{out30.png}
+      \end{figure}  
+      \begin{figure}
+        \includegraphics[width=1.0\linewidth]{out365.png}
+      \end{figure}  
+    \end{oneCol}
+    \end{columns}
+    
 %    \begin{figure}
 %<<plotfig1,fig=TRUE,echo=FALSE>>=
 % graph.measure.plotting()
@@ -135,13 +167,9 @@ graph.measure.plotting <- function(.path=".",
 %    \includegraphics[width=0.8\linewidth]{placeholder.jpg}
 %    \caption{The first figure should be a series of comparisons of network measures (e.g., degree distribution) for the totally aggregated network vs averaged values of the network aggregated at different time periods - 1 year, 1 month, 1 week, 1 day.  May also want to do some heat charts of those measures through time, since the averages might hide neat insights like seasonality.  I also think we could use some plots of something approximating edge weights -- like the distribution of edge duration proportion (time edge exists as fraction of interval).}
  %   \end{figure}
-    \begin{figure}
-    \includegraphics[width=0.8\linewidth]{placeholder.jpg}
-    \caption{This should be the figure showing the simulation results for aggregation on whole network vs having day-by-day networks.  Probably should be two figures, one for final sizes and one for trajectories.  If we have time, multiples of these for some parameter variation.}
-    \end{figure}
     
     \end{block}
-    \vfill
+    
     \end{threeCol}
     \spacer{}
     \end{columns}
