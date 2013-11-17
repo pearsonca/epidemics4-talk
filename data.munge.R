@@ -258,7 +258,8 @@ mapply(function(input, output){
   #dis<-e+i
   maxComparts<-max(ei[2,180:(2024-90),]/net.users[180:(2024-90)])
   png(output, width=15, height=15, units="cm", res=300)
-  plot(NA,ylim=c(0, maxComparts), xlim=c(0+180,2023-90), xlab="years", ylab="% net users", xaxt="n")
+  par(mgp=c(1.5,0.25,0), mar=c(3,3,1,1)+0.1,tcl=0.5)
+  plot(NA,ylim=c(0, maxComparts), xlim=c(0+180,2023-90), xlab="years", ylab="% net users", xaxt="n", bty="n")
   invisible(mapply(function(pop, col){
     lines(days, pop[1,,]/net.users, col=col)
     lines(days, pop[2,,]/net.users, col=col)
