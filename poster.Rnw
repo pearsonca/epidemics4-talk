@@ -60,6 +60,12 @@ We selected $\mu$, $\gamma$, and $\omega$ from literature estimates for influenz
     \begin{block}{Conclusion}
 The aggregation window for social network observations can determine the type of infectious dynamics that are possible to simulate for given parameters.
     \end{block}
+    \begin{block}{Acknowledgements}
+      \begin{description}
+      \item[CABP] is supported by Army Research Office MURI Award W911NF-11-1-0036
+      \item[TJH] is supported by CIA Grant \#00097046
+      \end{description}
+    \end{block}
     \begin{block}{References}
       \nocite{*} % Insert publications even if they are not cited in the poster
       \small{\bibliographystyle{unsrt}
