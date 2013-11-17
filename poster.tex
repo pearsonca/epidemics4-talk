@@ -43,12 +43,14 @@ We consider such simulation on $\mathbf{P\approx 2\times 10^6}$\textbf{ nodes}, 
 %       {\VeryHuge VeryHuge}\par
     \end{block}
     \begin{block}{Materials}
-Data preparation with R and Scala.  Network analysis and epidemic simulation with EpiFire\cite{hladish2012epifire}.  Visualization and poster with R and Rweave.  Source @ \href{https://github.com/pearsonca/epidemics4-talk}{github.com/pearsonca/epidemics4-talk}.
+Data preparation with R and Scala.  Network analysis and epidemic simulation with EpiFire\cite{hladish2012epifire} (new features to be formally documented in future publication, development code now available).  Visualization and poster with R and Rweave.  Source @ \href{https://github.com/pearsonca/epidemics4-talk}{github.com/pearsonca/epidemics4-talk}.
     \end{block}
     \begin{block}{Methods}
-Network measures computed in the standard way, after edges are determined on a per-time-period basis.  An edge exists between individuals if their access periods at a location overlap during a time period.
+The raw data have three issues: some logouts before logins, missing logout times, and overlapping logins for a single user at a location.  The first issue was resolved by swapping the times; this affected $\approx 10$ rows, and the swapped durations were consistent with other durations for those users.  For the missing logout times, we set them to their login times; this still allows those visits to intersect with other users.  Finally, we union all login periods to address to the overlapping periods.
 
-The epidemic is simulated given three parameters:\begin{itemize}
+The network measures for reference are the maximum component size and maximum degree, computed according to the standard definition for the edge configuration in each time period.  An edge exists between individuals if their access at a location overlaps during a time period.
+
+The epidemic is an \textbf{S$\rightarrow$E$\rightarrow$I$\rightarrow$R$\rightarrow$S} model. simulated given three parameters:\begin{itemize}
 \item transmission probability along a contact per simulation time, $\rho$,
 \item latent period, $\lambda_L$, and
 \item infectious period, $\lambda_I$

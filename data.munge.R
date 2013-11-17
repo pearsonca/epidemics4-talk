@@ -88,14 +88,14 @@ if (debug) dump<-apply(subset(montreal.df,duration<0),1,function(row) {
     res
   }
   
-  createDestroyNet.lines <- function(df, on, lty, xscale, lwd=1) {
+  createDestroyNet.lines <- function(df, on, lty, xscale, lwd=1, col.list=list("green","red","blue")) {
     create <- aggregator(df, "start.s", on, min)
     destroy <- aggregator(df, "end.s", on, max)
     net <- merger(create, destroy, on)
     mapply(function(data, col) {
       lines(data$time/hour*xscale, data$acc/max(data$acc), col=col, lty=lty, lwd=lwd)
       data ## this makes mapply return list(1 = create, 2 = destroy, 3 = net)
-    }, list(create, destroy, net), list("green","red","blue"))
+    }, list(create, destroy, net), col.list)
   }
   
 dataReview<-function(df) {
@@ -117,18 +117,19 @@ dataReview<-function(df) {
   axis(2, at=c(0,0.5,1), col="lightgrey")
   axis(1, at=ylines, lwd=0, labels=c("2005","2006","2007","2008","2009","2010"), col="lightgrey") ## weird - no 1.0, 6.0?
   
-  dump.loc<-createDestroyNet.lines(df, "loc.id", lty=1, xscale=xscale)
-  dump.user<-createDestroyNet.lines(df, "user.id", lty=1, lwd=2, xscale=xscale)
+  dump.loc<-createDestroyNet.lines(df, "loc.id", lty=1, lwd=1, xscale=xscale, col.list=list("darkgreen","darkred","darkblue"))
+  dump.user<-createDestroyNet.lines(df, "user.id", lty=1, lwd=3, xscale=xscale)
   legend(0.5, 1.0, bty="n",
-         legend=c("logins","new locations","new users","lost locations","lost users","net locations","net users"),
+         legend=c("logins","acc. new loc.","acc. new users","acc. lost loc.","acc. lost users","net locations","net users"),
          lty=c(1,1,1,1,1,1,1),
-         lwd=c(1,1,2,1,2,1,2),
-         col=c("grey","green","green","red","red","blue","blue"))
+         lwd=c(1,1,3,1,3,1,3),
+         col=c("grey","darkgreen","green","darkred","red","darkblue","blue"))
+  dump.user
 }
 
 if (plotting) {
   png(filename="dataReview.png",width=15, height=15, units="cm", res=300)
-  dataReview(merged.df)
+  users.list <- dataReview(merged.df)
   dev.off()
 }
 
@@ -208,7 +209,7 @@ if (plotting) {
   axis(2, at=pretty(c(1,550)), col="lightgrey")
   axis(1, at=ylines, lwd=0, labels=c("2005","2006","2007","2008","2009","2010"), col="lightgrey")
   legend(0.5, 550, bty="n",
-         legend=c("daily","weekly","monthly","quarterly","biannualy","yearly"),
+         legend=c("daily","weekly","monthly","quarterly","biannually","yearly"),
          col= cols, lty=1)
   dev.off()
   
@@ -232,32 +233,33 @@ if (plotting) {
   }, daySlices, cols, c(0.2, rep.int(1,length(daySlices)-1)) )
   axis(1, at=ylines, lwd=0, labels=c("2005","2006","2007","2008","2009","2010"), col="lightgrey")
   legend(0.5, peak, bty="n",
-         legend=c("daily","weekly","monthly","quarterly","biannualy","yearly"),
+         legend=c("daily","weekly","monthly","quarterly","biannually","yearly"),
          col= cols, lty=1)
   dev.off()
 }
  ## weird - no 1.0, 6.0?
 
-ref<-lapply(daySlices, function(daySpan){
-  fname <- paste("~/git/EpiFire/examples/day",daySpan,"edges.o", sep="")
-  results.list <- sapply(lapply(strsplit(readLines(fname)," "), as.integer), length)
-  list(rs=results.list)
-#   maxes<-sapply(results.list,function(x) max(c(x,0)))
-#   se<-getStartEnds(daySpan)
-#   lines(se$mids/60/60*xscale, maxes/daySpan, col=col, lwd=lwd)
-#   list(maxes=maxes, days=daySpan)
-})
 
-maxMax <- Reduce(function(m,l) max(m, l$max/l$days), ref, 0)
-compSizeBreaks <- 0:ceiling(maxMax)
-zeroEntry <- array(rep.int(0, length(compSizeBreaks)))
-
-ref2<-lapply(ref, function(l) {
- Reduce(rbind, sapply(l$rl, function(rs) {
-    if(length(rs) != 0) {
-      hist(rs/l$days, compSizeBreaks, plot=F)$counts / uniqueUCount
-    } else {
-      zeroEntry
-    }
-  }),matrix(nrow=0, ncol=length(zeroEntry)))
-})
+obsPerRun <- 2024
+probs<-c(0.5,.99)
+days<-0:2023
+extract<-function(x) quantile(x,probs)
+mapply(function(input, output){
+  data<-read.csv(input, header=F,sep="",col.names=c("day","S","E","I","R"))
+  runCount <- dim(data)[1]/obsPerRun
+  ei<-apply(array(data$E+data$I,c(obsPerRun,1,runCount)), 1:2, extract)
+  #i<-apply(array(data$I,c(obsPerRun,1,runCount)), 1:2, extract)
+  #r<-apply(array(data$R,c(obsPerRun,1,runCount)), 1:2, extract)
+  #dis<-e+i
+  maxComparts<-max(ei)
+#   png(output, width=15, height=15, units="cm", res=300)
+  plot(NA,ylim=c(0, maxComparts), xlim=c(0,2023), xlab="", ylab="", xaxt="n")
+  invisible(mapply(function(pop, col){
+    lines(days, pop[1,,], col=col)
+    lines(days, pop[2,,], col=col)
+  }, list(ei), c("lightgrey")))
+  ref<-array(data$E+data$I,c(obsPerRun,1,runCount))
+  invisible(mapply(function(ran, col){ lines(days,ref[,1,sample(1000,1)],col=col, lwd=3) }, sample(1000,5,replace=F), rainbow(5)))
+  axis(1,at=seq(0,2023,365))
+#   dev.off()
+}, c("~/Downloads/everything/30.o"), c("out.png"))
