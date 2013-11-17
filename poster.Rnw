@@ -29,9 +29,9 @@ defPar <- par()
     \spacer{}
     \begin{oneCol}
     \begin{block}{Introduction}
-Contact networks are \textbf{intrinsically temporal}, but often analyzed as \textbf{time-aggregated} to simplify analysis and simulation.  Simulation on empirical networks, however, may skip this aggregation with minimal additional complexity.
+Contact networks are \textbf{intrinsically temporal}, but often analyzed as \textbf{time-aggregated} to simplify analysis and simulation.  Simulation on empirical networks, however, can incorporate temporal changes with minimal additional complexity.
 
-We consider such simulation on $\mathbf{P\approx 2\times 10^6}$\textbf{ nodes}, interacting via $\mathbf{N\approx 2\times 10^6}$\textbf{ edges}, \textbf{over 5-years} of geo-temporal co-location data, derived from municipal WiFi access at businesses.  We start with a \textbf{review of network measures for different aggregation windows} on that data, and \textbf{conclude comparing simulated infections on these dynamic networks}.
+We consider such simulation on $\mathbf{\~ 2\times 10^6}$\textbf{ nodes}, interacting via $\mathbf{\~ 2\times 10^6}$\textbf{ edges}, \textbf{over 5-years} of geo-temporal co-location data, derived from municipal WiFi access at businesses in Montreal\cite{hoen2013montreal}.  We start with a \textbf{review of network measures for different aggregation windows} on that data, and \textbf{conclude comparing simulated infections on these dynamic networks}.
 %     \begin{block}{\large Fontsizes}
 %       \centering
 %       {\tiny tiny}\par
@@ -48,17 +48,18 @@ We consider such simulation on $\mathbf{P\approx 2\times 10^6}$\textbf{ nodes}, 
 Data preparation with R and Scala.  Network analysis and epidemic simulation with EpiFire\cite{hladish2012epifire} (new features to be formally documented in future publication, development code now available).  Visualization and poster with R and Rweave.  Source @ \href{https://github.com/pearsonca/epidemics4-talk}{github.com/pearsonca/epidemics4-talk}.
     \end{block}
     \begin{block}{Methods}
-The raw data have three issues: some logouts before logins, missing logout times, and overlapping logins for a single user at a location.  The first issue was resolved by swapping the times; this affected $\approx 10$ rows, and the swapped durations were consistent with other durations for those users.  For the missing logout times, we set them to their login times; this still allows those visits to intersect with other users.  Finally, we union all login periods to address to the overlapping periods.
+The raw data have three issues: some logouts before logins, missing logout times, and overlapping logins for a single user at a location.  The first issue was resolved by swapping the times; this affected $\approx 10$ rows, and the swapped durations were consistent with other durations for those users.  For the missing logout times, we set them to their login times; this still allows those visits to intersect with other users.  Finally, we union each user's login periods to address concurrent use from multiple devices.
 
-The network measures for reference are the maximum component size and maximum degree, computed according to the standard definition for the edge configuration in each time period.  An edge exists between individuals if their access at a location overlaps during a time period.
+The network measures for reference are the maximum component size and maximum degree, computed using the edge configuration in each time period.  An edge exists between individuals if their access at a location overlaps in time.
 
-The epidemic is an \textbf{S$\rightarrow$E$\rightarrow$I$\rightarrow$R$\rightarrow$S} model. simulated given three parameters:\begin{itemize}
-\item transmission probability along a contact per simulation time, $\rho$,
-\item latent period, $\lambda_L$, and
-\item infectious period, $\lambda_I$
+The epidemic is an \textbf{S$\rightarrow$E$\rightarrow$I$\rightarrow$R$\rightarrow$S} model, simulated given four parameters:\begin{itemize}
+\item contact rate, $\beta = 2.0 contacts/day$,
+\item latent period, $\mu = 1.2 days$,
+\item infectious period, $\gamma = 4.1 days$
+\item resistant period, $\omega = 365 days$
 \end{itemize}
 
-We selected the $\lambda$s from literature estimates for influenza.  We fit $\rho$ for each binning scale to reproduce mean final size literature estimates for influenza.  The simulation proceeds as typical for a static contact network, however as time passes one of the binning boundaries, edges are added and removed accordingly.
+We selected $\mu$, $\gamma$, and $\omega$ from literature estimates for influenza.  The resistant (immune) duration is the same for all individuals; other state durations are exponentially distributed.  As each individual is infected, contact and state transition times are generated.  As time passes, edges are added and removed when binning boundaries are reached.  At contact times, a contact is chosen from the edges that exist at that moment. 
     \end{block}
     \begin{block}{Mathematical Section}
 Probably not relevant.  Maybe restate the network measures?  Diagram SIR flow?
