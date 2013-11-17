@@ -50,17 +50,15 @@ The raw data have three issues: some logouts before logins, missing logout times
 
 The network measures for reference are the maximum component size and maximum degree, computed using the edge configuration in each time period.  An edge exists between individuals if their access at a location overlaps in time.
 
-The epidemic is an \textbf{S$\rightarrow$E$\rightarrow$I$\rightarrow$R$\rightarrow$S} model, simulated given four parameters:\begin{itemize}
-\item contact rate, $\beta = 2.0 contacts/day$,
-\item latent period, $\mu = 1.2 days$,
-\item infectious period, $\gamma = 4.1 days$
-\item resistant period, $\omega = 365 days$
+The epidemic is an \textbf{S$\rightarrow$E$\rightarrow$I$\rightarrow$R$\rightarrow$S} model, simulated given five parameters:\begin{itemize}
+\item contact rate, $\beta = 2.0$ contacts/day,
+\item latent period, $\mu = 1.2$ days,
+\item infectious period, $\gamma = 4.1$ days
+\item resistant period, $\omega = 365$ days
+\item and the infectious seeding rate, $\sigma_I = 0.1$ per day
 \end{itemize}
 
 We selected $\mu$, $\gamma$, and $\omega$ from literature estimates for influenza.  The resistant (immune) duration is the same for all individuals; other state durations are exponentially distributed.  As each individual is infected, contact and state transition times are generated.  As time passes, edges are added and removed when binning boundaries are reached.  At contact times, a contact is chosen from the edges that exist at that moment. 
-    \end{block}
-    \begin{block}{Mathematical Section}
-Probably not relevant.  Maybe restate the network measures?  Diagram SIR flow?
     \end{block}
     \begin{block}{Conclusion}
 The aggregation of empirical observations has important implications for simulation results.
