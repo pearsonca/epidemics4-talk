@@ -63,7 +63,7 @@ The epidemic is an \textbf{S$\rightarrow$E$\rightarrow$I$\rightarrow$R$\rightarr
 We selected $\mu$, $\gamma$, and $\omega$ from literature estimates for influenza.  The resistant (immune) duration is the same for all individuals; other state durations are exponentially distributed.  As each individual is infected, contact and state transition times are generated.  As time passes, edges are added and removed when binning boundaries are reached.  At contact times, a contact is chosen from the edges that exist at that moment. 
     \end{block}
     \begin{block}{Conclusion}
-The aggregation of empirical observations has important implications for simulation results.
+The aggregation window for social network observations can determine the type of infectious dynamics that are possible to simulate for given parameters.
     \end{block}
     \begin{block}{References}
       \nocite{*} % Insert publications even if they are not cited in the poster
@@ -73,39 +73,6 @@ The aggregation of empirical observations has important implications for simulat
     \end{oneCol}
     \spacer{}
     \begin{threeCol}
-<<ioEdgeTimeSeries,echo=FALSE>>=
-day1comps <- read.csv(file="/Users/carlpearson/git/EpiFire/examples/day1comp.o", header=F)
-graph.measure.plotting <- function(.path=".",
-  degree.pattern="degrees.csv$",
-  component.pattern="components.csv$") {
-  ## expect file heads = "start end 0 1 ... n" where n is the max count for the series
-  ## rows are then an observation interval at a time
-  ## format = $starttime $endtime $degreeCount[0] $degreeCount[1] ... $degreeCount[n]
-  ##  and
-  ## format = $starttime $endtime $componentSizeCount[0] ...etc
-  ## terminate with a newline
-#   degree.ts.df.list <- lapply( ## consolidate data handles for processing
-#     dir(path=.path, pattern=degree.pattern),
-#     read.csv,
-#     header=T, sep="", fill=T)
-#   par(mfcol=c(length(degree.ts.df.list),3),
-#       bty="n", mar=c(0.5,3,0.5,0.5), oma=c(3,0,0,0))
-#   yield<-lapply(degree.ts.df.list, function(e.csv) { ## 
-#     xlim<-c(min(e.csv$start), max(e.csv$end))
-#     x <- (e.csv$start + e.csv$end)/2
-#     ylim<-c(0, dim(e.csv)[2]-3) # 2 for start/end + 1 for 0
-#     y <- seq(0,ylim[2])
-#     z <- as.matrix(e.csv[,-c(1,2)])
-#     image(x,y,z,xlim=xlim, ylim=ylim, xaxt="n", xlab="", ylab="", yaxt="n")
-#     axis(2,at=ylim, labels=c(0,expression(k[max])))
-#     list(xlim=xlim,x=x)
-#   })
-#   tticks <- tail(yield,1)[[1]]
-#   ## TODO reduced ticks set - e.g., if we go to sub-daily increments over a multi-year period, that's too much res
-#   ## TODO adjust labels to relevant times
-#   axis(1,outer=T,at=c(tticks$xlim[1],tticks$x,tticks$xlim[2]))
-}
-@
     \begin{block}{Source Data Overview}
     \begin{columns}
     \begin{oneCol}
@@ -126,6 +93,7 @@ graph.measure.plotting <- function(.path=".",
       \end{figure}   
     \end{oneCol}
     \end{columns}
+    The WiFi access data have several notable trends.  First, the observed system usage, even after merging all duplicates, still increases by orders of magnitude, which is hardly reflected in the population change of any major metropolitan area during the same time.  The effect of the end boundary is also evident in the net users and locations.  Finally, the seasonal usage patterns are quite clear, even against the background trend. 
     \end{block}
     
     \begin{block}{Results}
